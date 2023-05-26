@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "608173730785",
+    "project_id": "herraf-app",
+    "storage_bucket": "herraf-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:608173730785:android:5efd67f8a3a6b2ad8f40a0",
+        "android_client_info": {
+          "package_name": "com.herraf.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "608173730785-ed3kqh9e8ronmnpk9k02u72ui9vu21c0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCm5CjPt6pUrtx2_s-MB5fVyQDiETu3KOY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "608173730785-ed3kqh9e8ronmnpk9k02u72ui9vu21c0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
