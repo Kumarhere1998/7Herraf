@@ -703,9 +703,6 @@ class _CheckOutStepState extends State<CheckOutStep> {
                     InkWell(
                       onTap: () async {
                         if (_formKey.currentState!.validate()) {
-                          // If the form is valid, display a snackbar. In the real world,
-                          // you'd often call a server or save the information in a database.
-
                           SharedPreferences prefs =
                               await SharedPreferences.getInstance();
                           setState(() {
@@ -718,19 +715,19 @@ class _CheckOutStepState extends State<CheckOutStep> {
                             postAddress.phone_no = phoneController.text;
                             postAddress.zipcode = zipController.text;
                             postAddress.state = stateController.text;
+                            postAddress.country = countryController.text;
 
                             ApiService.postaddressData(postAddress)
                                 .then((value) {
-                              //  var res = value;
-                              var res = value["data"]["insertId"];
-                              // print(res);
-
+                              print('VALUEBefore==>$value');
+                              var addressID = value["address_id"];
+                              print('VALUE==>$addressID');
                               Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => CheckOutStep2(
-                                        // res['pack_name'],
-                                        ),
+                                      addressID: addressID,
+                                    ),
                                   ));
 
                               // ScaffoldMessenger.of(context).showSnackBar(

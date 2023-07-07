@@ -8,7 +8,6 @@ import 'package:herraf_app/addcheckout.dart';
 
 import 'package:herraf_app/api_servivce.dart';
 import 'package:herraf_app/catalog2.dart';
-import 'package:herraf_app/catalog3.dart';
 
 import 'package:herraf_app/testfile.dart';
 import 'package:herraf_app/textshowmore.dart';
@@ -65,16 +64,12 @@ class _CatalogScreen1State extends State<CatalogScreen1> {
     setState(() {
       // id = prefs.getString("id");
       _addtocart.user_id = prefs.getString('user_id')!;
-      print(_addtocart.user_id);
-      print('hyy');
     });
   }
 
   catalogdata() {
     ApiService.catalogdata().then((value) {
-      print("hoglllg");
       setState(() {
-        print("rakhi${value}");
         catalog = value["data"];
       });
     });
@@ -87,14 +82,10 @@ class _CatalogScreen1State extends State<CatalogScreen1> {
     _addtocart.price = item["pack_price"].toString();
     _addtocart.discount = item["pack_discount"].toString();
     _addtocart.quantity = "1";
-    print(_addtocart.pack_id);
     ApiService.addtocart(_addtocart).then((value) {
-      print("hjhjhh${value}");
       setState(() {
         cart = value;
-        print("yhjjh");
-        print("print addtocart${cart}");
-        print("addtocart${cart.length}");
+
         addtocartdata();
       });
     });
@@ -103,12 +94,9 @@ class _CatalogScreen1State extends State<CatalogScreen1> {
   var carttt = [];
   addtocartdata() {
     var id = ApiService.addtocartdata(_addtocart.user_id).then((value) {
-      print("hoglllg");
       setState(() {
-        print("rakhi${value}");
         //carttt = value;
         totalCartItems = value?.length;
-        print("print addtocartdata${totalCartItems}");
       });
     });
   }
@@ -117,14 +105,11 @@ class _CatalogScreen1State extends State<CatalogScreen1> {
 
   Future<void> myflashcard() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
-    ApiService.myflashcard(pref.getString('user_id')).then((value) {
+    ApiService.myflashcard().then((value) {
       // ApiService.class_data("3,4", pref.getString("token"),date).then((value) {
 
       setState(() {
         flashcard = value["data"];
-        print("myflashcard");
-        print("classdata$flashcard");
-        print("classlength${flashcard.flashcard}");
       });
     });
   }

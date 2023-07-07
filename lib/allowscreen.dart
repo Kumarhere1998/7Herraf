@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 // import 'package:flutter_qr_reader_copy/flutter_qr_reader_copy.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:herraf_app/api_servivce.dart';
+import 'package:herraf_app/bottomNavBar.dart';
 import 'package:herraf_app/qrscanpack.dart';
 
 import 'package:image_picker/image_picker.dart';
@@ -26,8 +27,7 @@ class QrCodeScannerOne extends StatefulWidget {
 // }
 
 class _QrCodeScannerOneState extends State<QrCodeScannerOne> {
-//  __ActivatepackData _activatepackData = new __ActivatepackData();
-  // List activatepack = [];
+  bool backBotton = false;
 
   @override
   void reassemble() async {
@@ -83,27 +83,26 @@ class _QrCodeScannerOneState extends State<QrCodeScannerOne> {
     controller.scannedDataStream.listen((event) {
       setState(() async {
         // File imgFile = File(path);
-        // print(imgFile.path);
         result = event;
         if (result != null) {
           controller.pauseCamera();
-          print("result!.code${result!.code}");
           SharedPreferences prefs = await SharedPreferences.getInstance();
 
           ApiService.postqrdata(prefs.getString('user_id'), result!.code)
               .then((value) {
-            print("hoglllg");
-            print('user_id');
             setState(() {
-              print("qrscan${value}");
               catalog = value["data"];
+              if (!value['status']) {
+                backBotton = true;
+              }
 
               showModalBottomSheet(
+                  isDismissible: false,
                   context: context,
                   builder: (context) {
                     return Padding(
                       padding: const EdgeInsets.all(18.0),
-                      child: value['status'] == true
+                      child: value['status']
                           ? Column(
                               mainAxisSize: MainAxisSize.min,
                               children: <Widget>[
@@ -135,8 +134,6 @@ class _QrCodeScannerOneState extends State<QrCodeScannerOne> {
                                 ),
                                 Padding(
                                   padding: EdgeInsets.all(10),
-
-                                  // padding: const EdgeInsets.symmetric(horizontal: 15),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
@@ -171,18 +168,8 @@ class _QrCodeScannerOneState extends State<QrCodeScannerOne> {
                                                         const Color(0xff212121),
                                                   ),
                                                   textAlign: TextAlign.left,
-                                                  //textAlign: TextAlign.justify,
                                                 ),
                                               ),
-                                              // Text(
-                                              //   textAlign: TextAlign.justify,
-                                              //   "${catalog["pack_name"]}",
-                                              //   style: GoogleFonts.poppins(
-                                              //     fontSize: 18,
-                                              //     fontWeight: FontWeight.w500,
-                                              //     color: const Color(0xff212121),
-                                              //   ),
-                                              // ),
                                               Text(
                                                 textAlign: TextAlign.center,
                                                 "${catalog["pack_price"]}",
@@ -218,7 +205,7 @@ class _QrCodeScannerOneState extends State<QrCodeScannerOne> {
                                           });
                                         },
                                         child: Text(
-                                          "Activate pack   ",
+                                          "Activate pack  ",
                                           style: GoogleFonts.poppins(
                                               fontWeight: FontWeight.w600,
                                               fontSize: 16,
@@ -230,29 +217,107 @@ class _QrCodeScannerOneState extends State<QrCodeScannerOne> {
                             )
                           : Container(
                               height: 200,
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              child: Column(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                      'Match not found please \nscan valid QR code.',
-                                      style: GoogleFonts.poppins(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 20,
-                                          color: Colors.black)),
-                                  IconButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          controller.resumeCamera();
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      icon: const Icon(
-                                        Icons.keyboard_arrow_down_rounded,
-                                        size: 30,
-                                        color: Color(0xff2B1B1F),
-                                      ))
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                          'Match not found please \nscan valid QR code.',
+                                          style: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 20,
+                                              color: Colors.black)),
+                                      IconButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              controller.resumeCamera();
+                                            });
+                                            Navigator.pop(context);
+                                          },
+                                          icon: const Icon(
+                                            Icons.keyboard_arrow_down_rounded,
+                                            size: 30,
+                                            color: Color(0xff2B1B1F),
+                                          ))
+                                    ],
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceAround,
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
+                                            border: Border.all(
+                                                color: const Color(0xffB0A9A9),
+                                                width: 1),
+                                            borderRadius:
+                                                const BorderRadius.all(
+                                                    Radius.circular(8))),
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.050,
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.300,
+                                        child: TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        BottomNav(0)),
+                                              );
+                                              // Navigator.pop(context);
+                                            },
+                                            child: Text("Buy new pack",
+                                                style: GoogleFonts.poppins(
+                                                    color:
+                                                        const Color(0xffB0A9A9),
+                                                    fontSize: 14,
+                                                    fontWeight:
+                                                        FontWeight.w500))),
+                                      ),
+                                      InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            controller.resumeCamera();
+                                          });
+                                          Navigator.pop(context);
+                                        },
+                                        child: Container(
+                                          alignment: Alignment.center,
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.050,
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.300,
+                                          decoration: const BoxDecoration(
+                                              color: Color(0xffCE8C8C),
+                                              borderRadius: BorderRadius.all(
+                                                  (Radius.circular(10)))),
+                                          child: InkWell(
+                                            child: Text("Try again",
+                                                style: GoogleFonts.poppins(
+                                                    color:
+                                                        const Color(0xffFFFFFF),
+                                                    fontSize: 14,
+                                                    fontWeight:
+                                                        FontWeight.w600)),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  )
                                 ],
                               ),
                             ),
@@ -296,11 +361,6 @@ class _QrCodeScannerOneState extends State<QrCodeScannerOne> {
                               size: 30,
                               color: Color(0xff2B1B1F),
                             ))
-                        // const Icon(
-                        //   Icons.keyboard_arrow_down_rounded,
-                        //   size: 30,
-                        //   color: Color(0xff2B1B1F),
-                        // )
                       ],
                     ),
                   ),
@@ -391,124 +451,64 @@ class _QrCodeScannerOneState extends State<QrCodeScannerOne> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child:
-            Column(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-          // Row(
-          //   children: [
-          //     const SizedBox(height: 19, width: 10),
-          //     InkWell(
-          //       child: const Icon(Icons.arrow_back_ios_outlined,
-          //           color: Color(0xff0093ED), size: 20),
-          //       onTap: () {
-          //         Navigator.pop(context);
-          //       },
-          //     ),
-          //     const SizedBox(
-          //       height: 19,
-          //       width: 20,
-          //     ),
-          //     const Text(
-          //       "Scan QR Code",
-          //       style: TextStyle(
-          //           color: Color(
-          //             0xff0093ED,
-          //           ),
-          //           fontSize: 18,
-          //           fontWeight: FontWeight.w600),
-          //     )
-          //   ],
-          // ),
+      body: WillPopScope(
+        onWillPop: () {
+          if (backBotton) {
+            setState(() {
+              controller!.resumeCamera();
+              backBotton = false;
+            });
+          } else {
+            Navigator.pop(context);
+          }
 
-          Padding(
-            padding: const EdgeInsets.only(),
-            child: Column(
+          var confirm;
+          return confirm;
+        },
+        child: SingleChildScrollView(
+          child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                Container(
-                  height: MediaQuery.of(context).size.height,
-                  width: MediaQuery.of(context).size.width,
-                  decoration: BoxDecoration(
-                      border:
-                          Border.all(width: 1, color: const Color(0xffB6E1F4)),
-                      borderRadius:
-                          const BorderRadius.all(Radius.circular(20))),
-                  child: QRView(
-                    overlayMargin: EdgeInsets.symmetric(
-                        vertical: MediaQuery.of(context).size.height / 3.2,
-                        horizontal: 28),
-                    overlay: QrScannerOverlayShape(
-                      cutOutSize: MediaQuery.of(context).size.height / 2.61,
-                      borderColor: Colors.blueAccent,
-                      // borderRadius: 10,
-                      borderLength: 20,
-                      borderWidth: 5,
-                      overlayColor: const Color(0xff010040),
-                    ),
-                    key: _globalkey,
-                    onQRViewCreated: qr,
+                Padding(
+                  padding: const EdgeInsets.only(),
+                  child: Column(
+                    children: [
+                      Container(
+                        height: MediaQuery.of(context).size.height,
+                        width: MediaQuery.of(context).size.width,
+                        decoration: BoxDecoration(
+                            border: Border.all(
+                                width: 1, color: const Color(0xffB6E1F4)),
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(20))),
+                        child: QRView(
+                          overlayMargin: EdgeInsets.symmetric(
+                              vertical:
+                                  MediaQuery.of(context).size.height / 3.2,
+                              horizontal: 28),
+                          overlay: QrScannerOverlayShape(
+                            cutOutSize:
+                                MediaQuery.of(context).size.height / 2.61,
+                            borderColor: Colors.blueAccent,
+                            // borderRadius: 10,
+                            borderLength: 20,
+                            borderWidth: 5,
+                            overlayColor: const Color(0xff010040),
+                          ),
+                          key: _globalkey,
+                          onQRViewCreated: qr,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
-          // Container(
-          //   width: MediaQuery.of(context).size.width * 0.2,
-          //   height: MediaQuery.of(context).size.height * 0.05,
-          //   decoration: BoxDecoration(
-          //       border: Border.all(color: const Color(0xff0093ED), width: 2),
-          //       borderRadius: const BorderRadius.all(Radius.circular(12))),
-          //   // child: TextButton(
-          //   //     onPressed: () {
-          //   //       controller!.resumeCamera();
-          //   //     },
-          //   //     child: const Text("Retake")),
-          // ),
-          Center(
-            child: (result != null)
-                ? Text('Result: ${result!.code}')
-                : const Text('Scan a code'),
-          ),
-          // Text("$result"),
-          // Container(
-          //   height: 48,
-          //   width: 309,
-          //   decoration: const BoxDecoration(
-          //       color: Color(0xff0093ED),
-          //       borderRadius: BorderRadius.all(Radius.circular(5))),
-          //   child: InkWell(
-          //     child: SizedBox(
-          //       width: MediaQuery.of(context).size.width * 0.824,
-          //       height: MediaQuery.of(context).size.height * 0.059,
-          //       child: InkWell(
-          //         child: Row(
-          //             mainAxisAlignment: MainAxisAlignment.center,
-          //             children: [
-          //               const Image(
-          //                   image: AssetImage("assets/img/photo_icon.png"),
-          //                   height: 25),
-          //               const SizedBox(width: 10, height: 48),
-          //               Text(
-          //                 "Select photo from a device",
-          //                 style: GoogleFonts.poppins(
-          //                     color: const Color(0xffFFFFFF),
-          //                     fontWeight: FontWeight.w600,
-          //                     fontSize: 16),
-          //               )
-          //             ]),
-          //         onTap: () => pickImage(),
-          //       ),
-          //     ),
-          //     onTap: () {
-          //       Navigator.push(
-          //         context,
-          //         MaterialPageRoute(
-          //             builder: (context) => const QrCodeScannerTwo()),
-          //       );
-          //       controller!.resumeCamera();
-          //     },
-          //   ),
-          // )
-        ]),
+                Center(
+                  child: (result != null)
+                      ? Text('Result: ${result!.code}')
+                      : const Text('Scan a code'),
+                ),
+              ]),
+        ),
       ),
     );
   }

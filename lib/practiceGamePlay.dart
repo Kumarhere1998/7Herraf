@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:herraf_app/api_servivce.dart';
 import 'package:herraf_app/bottomNavBar.dart';
+import 'package:herraf_app/practiceGameScreen.dart';
 import 'package:herraf_app/practiceGameStart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -44,11 +45,11 @@ class _PracticeGamePlayState extends State<PracticeGamePlay> {
 
   @override
   void initState() {
-    print(widget.gameFriend);
     _getUserInfo();
     // if (widget.gameFriend != null) {
     //   groupUsers.add(widget.gameFriend);
     // } else {}
+    print(user_photo);
 
     super.initState();
   }
@@ -69,29 +70,30 @@ class _PracticeGamePlayState extends State<PracticeGamePlay> {
         isSwitched = true;
         textValue = 'Switch Button is ON';
       });
-      print('Switch Button is ON');
     } else {
       setState(() {
         isSwitched = false;
 
         textValue = 'Switch Button is OFF';
       });
-      print('Switch Button is OFF');
     }
   }
 
   _playPracticeGame() async {
-    // print('Clicked');
     SharedPreferences pref = await SharedPreferences.getInstance();
     ApiService.practicegame(pref.getString('user_id')).then((value) {
       setState(() {
         practiceInfo = value['game_group_id'];
-        // print(practiceInfo);
         if (value['status']) {
+          // Navigator.push(
+          //     context,
+          //     MaterialPageRoute(
+          //         builder: (context) => PracticeGame(groupId: practiceInfo)));
           Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => PracticeGame(groupId: practiceInfo)));
+                  builder: (context) =>
+                      PracticeGameScreen(groupId: practiceInfo)));
           Future.delayed(const Duration(seconds: 1), () {
             setState(() {
               isLoading = false;
@@ -104,7 +106,6 @@ class _PracticeGamePlayState extends State<PracticeGamePlay> {
 
   @override
   Widget build(BuildContext context) {
-    // print(user_photo);
     return Scaffold(
         backgroundColor: Color(0xffE5E5E5),
         body: Container(
@@ -197,7 +198,9 @@ class _PracticeGamePlayState extends State<PracticeGamePlay> {
                                 borderRadius: BorderRadius.circular(10),
                                 image: DecorationImage(
                                     image: NetworkImage(
-                                        '${URLS.IMAGE_URL}/$user_photo'),
+                                        // '${URLS.IMAGE_URL}/$user_photo'
+                                        '$user_photo'
+                                        ),
                                     fit: BoxFit.cover),
                               ),
                             ),

@@ -320,11 +320,9 @@ class _OnboardingState extends State<Onboarding> {
                                                                     .request()
                                                                     .isGranted) {
                                                                   // Either the permission was already granted before or the user just granted it.
-                                                                  print(
-                                                                      "Location Permission is granted");
+                                                               
                                                                 } else {
-                                                                  print(
-                                                                      "Location Permission is denied.");
+                                                       
                                                                 }
                                                                 Navigator.push(
                                                                     context,

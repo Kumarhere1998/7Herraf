@@ -82,7 +82,6 @@ class _GameState extends State<Game> {
     initSocket();
     _getUserInfo();
     // if (widget.playerCount == 2) {
-    //   print('PlayerCounthere==>${widget.playerCount}');
 
     //   _totalCardDistribution();
     // }
@@ -131,7 +130,6 @@ class _GameState extends State<Game> {
 
   // _gameSound() async {
   //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   print("MUSIC==> ${prefs.getBool('music')!}");
   //   if (prefs.getBool('music') == true) {
   //     AudioPlayer().play(AssetSource('sound/GameSound.mp3'));
   //   }
@@ -145,7 +143,6 @@ class _GameState extends State<Game> {
   _totalCardDistribution() {
     ApiService.card_distribution(widget.packid, widget.partnerdata!["group_id"])
         .then((value) {
-      print('TOTALCARDS==>$value');
       setState(() {
         totalCard = value['data'];
         if (value['status']) {
@@ -160,7 +157,6 @@ class _GameState extends State<Game> {
     ApiService.first_get_deck_card(
             prefs.get('user_id'), widget.partnerdata!["group_id"])
         .then((value) {
-      print('FIRSTDECKCARD==> $value');
       for (var i = 0; i < value["data"].length; i++) {
         setState(() {
           deckCards.add({
@@ -189,7 +185,6 @@ class _GameState extends State<Game> {
     ApiService.sevenCardDistribution(widget.packid,
             widget.partnerdata!["group_id"], widget.partnerdata!["id"])
         .then((value) {
-      // print('VALUE==>$value');
       for (var i = 0; i < value["data"]['randomCards'].length; i++) {
         setState(() {
           mycard.add({
@@ -248,7 +243,6 @@ class _GameState extends State<Game> {
   }
 
   _runHerraf() {
-    print('Hereee==> ${deckCards[(deckCards.length - 1)]['card_id']}');
     showGeneralDialog(
         context: context,
         barrierDismissible: true,
@@ -478,7 +472,6 @@ class _GameState extends State<Game> {
                               onTap: () {
                                 // _penalty(deckCards[0]["id"]);
                                 // Navigator.of(context).pop();
-                                print('Sorry');
                               },
                               child: Transform.rotate(
                                 angle: 13.10,
@@ -554,7 +547,6 @@ class _GameState extends State<Game> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     ApiService.leaveGame(prefs.get('user_id'), widget.partnerdata!["group_id"])
         .then((value) {
-      print(value);
     });
     Navigator.push(
         context, MaterialPageRoute(builder: (context) => BottomNav(2)));
@@ -564,14 +556,12 @@ class _GameState extends State<Game> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     ApiService.gameWinner(prefs.get('user_id'), widget.partnerdata!["group_id"])
         .then((value) {
-      print(value);
     });
   }
 
   _winnerConclude() async {
     ApiService.GameWinnerConculde(widget.partnerdata!["group_id"])
         .then((value) {
-      print('GAMEWINNERCONCLUDE==> $value');
       // setState(() {
       //   gameWinner = value['message'];
       // });
@@ -585,8 +575,6 @@ class _GameState extends State<Game> {
     var Cards = mycard.length;
     var Cards1 = partnerCard.length;
     var remainingMyCard = remainingMyCards.length;
-
-    // print('PlayerCount==> ${widget.playerCount}');
 
     return Scaffold(
       backgroundColor: Color(0xffDADADA),
@@ -859,7 +847,6 @@ class _GameState extends State<Game> {
                                     begin: const Duration(minutes: 3),
                                     end: Duration.zero),
                                 onEnd: () {
-                                  print('Timer ended');
                                 },
                                 builder: (BuildContext context, Duration value,
                                     Widget? child) {
@@ -1520,7 +1507,6 @@ class _GameState extends State<Game> {
                   ),
                   InkWell(
                     onTap: () {
-                      // print('Here==>${deckCards.last}');
                       _runHerraf();
                     },
                     child: Container(
@@ -1715,14 +1701,12 @@ class _GameState extends State<Game> {
       'group_id': widget.partnerdata!["group_id"].toString(),
       'user_id': user_id.toString()
     };
-    //print(messageMap);
     await ApiService.sendChat(messageMap);
 
     Navigator.pop(context);
   }
 
   _pushMyCard(index) async {
-    // print(index);
     SharedPreferences prefs = await SharedPreferences.getInstance();
     ApiService.deck_area(
       prefs.getString('user_id'),
@@ -1735,7 +1719,6 @@ class _GameState extends State<Game> {
       widget.packid,
       mycard[index]["card_type"],
     ).then((value) {
-      print(value);
       getDeckCards(widget.partnerdata!["group_id"]);
     });
     setState(() {
@@ -1753,7 +1736,6 @@ class _GameState extends State<Game> {
       prefs.getString('user_id'),
       widget.partnerdata!["group_id"],
     ).then((value) {
-      print('CardFromDeck==>$value');
 
       setState(() {
         mycard.add({
@@ -1774,7 +1756,6 @@ class _GameState extends State<Game> {
   getDeckCards(group_id) {
     mytimer = Timer.periodic(Duration(seconds: 2), (timer) {
       ApiService.get_deck_card(group_id).then((value) {
-        // print('VALUE$value');
         for (var i = 0; i < value["data"].length; i++) {
           setState(() {
             deckCards.add({
@@ -1796,9 +1777,7 @@ class _GameState extends State<Game> {
   }
 
   _penalty(limit) async {
-    print(limit);
     ApiService.penalty(widget.partnerdata!["group_id"], limit).then((value) {
-      print(value['data']);
       for (var i = 0; i < value["data"].length; i++) {
         setState(() {
           mycard.add({

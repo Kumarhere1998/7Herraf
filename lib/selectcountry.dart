@@ -26,9 +26,7 @@ class _HomePage1State extends State<HomePage1> {
     ApiService.selectcountrydata().then((value) {
       // ApiService.class_data("3,4", pref.getString("token"),date).then((value) {
 
-      print("hoglllg");
       setState(() {
-        print("rakhi${value}");
         country = value;
       });
     });
@@ -101,7 +99,6 @@ class _HomePage1State extends State<HomePage1> {
           child: ListView.builder(
             itemCount: country.length,
             itemBuilder: (BuildContext context, int index) {
-              print(country.length);
               return InkWell(
                   onTap: () {
                     Navigator.push(

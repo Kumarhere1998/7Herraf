@@ -112,7 +112,6 @@ class Shared {
   // save data
 
   static Future<bool> saveLoginSharedPreference(islogin) async {
-    print(loginSharedPreference);
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return await prefs.setBool(loginSharedPreference, islogin);
   }

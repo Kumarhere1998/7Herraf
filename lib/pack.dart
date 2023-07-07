@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:herraf_app/api_servivce.dart';
 import 'package:herraf_app/invite.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class MyPack extends StatefulWidget {
   @override
@@ -13,25 +12,40 @@ bool isLoading = true;
 
 class _MyPackState extends State<MyPack> {
   List<dynamic> mypack = [];
+  String message = '';
 
   @override
   void initState() {
-    selectpack;
+    selectpack();
     super.initState();
   }
 
-  get selectpack async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    print(pref.get('user_id'));
-    ApiService.selectpack(pref.get('user_id')).then((value) {
-      // print(value);
-      setState(() {
-        // print("Playing Cart ==>${value}");
-        isLoading = false;
-        if (value['data'].length > 0) {
-          mypack = value['data'];
-        }
-      });
+  // get selectpack async {
+  //   ApiService.selectpack().then((value) {
+  //     print(value);
+  //     mypack = value['data'];
+  //     setState(() {
+  //       isLoading = false;
+  //     });
+  //   });
+  // }
+  selectpack() async {
+    ApiService.selectpack().then((value) {
+      print('VALUEHere==>$value');
+      if (value['status']) {
+        mypack = value['data'];
+        setState(() {
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          message = value['message'];
+          isLoading = false;
+          print(message);
+        });
+      }
+
+      // if (value['status']) {}
     });
   }
 
@@ -117,7 +131,7 @@ class _MyPackState extends State<MyPack> {
                       : mypack.length == 0
                           ? Center(
                               child: Text(
-                              "Playing pack is not available",
+                              "$message",
                               style: GoogleFonts.poppins(
                                   color: Color(0xffB0A9A9), fontSize: 20),
                               textAlign: TextAlign.center,
@@ -125,7 +139,9 @@ class _MyPackState extends State<MyPack> {
                           : GridView.builder(
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 2, crossAxisSpacing: 10),
+                                      // childAspectRatio: 200,
+                                      crossAxisCount: 2,
+                                      crossAxisSpacing: 12),
                               itemCount: mypack.length,
                               itemBuilder: (context, position) {
                                 return InkWell(
@@ -184,7 +200,6 @@ class _MyPackState extends State<MyPack> {
                                                       groupValue: 'user_id',
                                                       onChanged: (index) {
                                                         setState(() {
-                                                          // print("${mypack}");
                                                           Navigator.push(
                                                               context,
                                                               MaterialPageRoute(

@@ -13,7 +13,7 @@ class _CalendarState extends State<Calendar> {
   DateTime today = DateTime.utc(2021, 10, 12);
   void _oneDaySelected(DateTime day, DateTime focusedDay) {
     setState(() {
-      print(today);
+
       today = day;
     });
   }

@@ -24,7 +24,6 @@ class _WonPageState extends State<WonPage> {
   @override
   @override
   Widget build(BuildContext context) {
-    print(widget.gameWinner);
     return Scaffold(
         backgroundColor: Color(0xffE5E5E5),
         body: SafeArea(

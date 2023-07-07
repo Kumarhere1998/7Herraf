@@ -39,32 +39,25 @@ class _GoogleloginPageNewState extends State<GoogleloginPageNew> {
   final TextEditingController passwordController = TextEditingController();
 
   // _googleLogin() async {
-  //   print("calling me");
   //   try {
   //     GoogleSignInAccount? googleSignInAccount = await _googleSignIn.signIn();
-  //     print(googleSignInAccount);
   //   } catch (error) {
-  //     print(error);
   //   }
   // }
 
   facebookLogin() async {
-    print("FaceBook");
     try {
       final result =
           await FacebookAuth.i.login(permissions: ['public_profile', 'email']);
       if (result.status == LoginStatus.success) {
         final userData = await FacebookAuth.i.getUserData();
-        print(userData);
       }
     } catch (error) {
-      print(error);
     }
   }
 
   _saveUserInfo(id, first_name, email, photo, type) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    print(first_name);
     setState(() {
       //    _loginData.id = id;
       // _loginData.displayName = name;
@@ -83,16 +76,11 @@ class _GoogleloginPageNewState extends State<GoogleloginPageNew> {
       _loginData.photo = photo;
       _loginData.type = type;
 
-      print(_loginData.first_name);
-      print(_loginData.photo);
-      print("hyy");
-      print("hyy");
+    
 
-      print(_loginData);
       ApiService.postLogin(_loginData).then((value) {
         var res = value;
-        print(res["user_id"]);
-        print(res["photo"]);
+      
 
         prefs.setString("user_id", res["id"].toString());
         prefs.setString("first_name", res["first_name"].toString());
@@ -115,13 +103,10 @@ class _GoogleloginPageNewState extends State<GoogleloginPageNew> {
   var name;
 
   _googleLogin() async {
-    print('_googleSignIn sdfsdf');
     try {
       await _googleSignIn.signIn();
       setState(() {
-        print(
-          _googleSignIn.currentUser?.displayName,
-        );
+    
         _saveUserInfo(
           _googleSignIn.currentUser?.id,
           _googleSignIn.currentUser?.displayName,
@@ -131,7 +116,6 @@ class _GoogleloginPageNewState extends State<GoogleloginPageNew> {
         );
       });
     } catch (err) {
-      print("this error$err");
     }
   }
 
@@ -409,18 +393,7 @@ class _GoogleloginPageNewState extends State<GoogleloginPageNew> {
                                                       ),
                                                     ),
                                                     onTap: () async {
-                                                      // if (await Permission.location.request().isGranted) {
-                                                      //   // Either the permission was already granted before or the user just granted it.
-                                                      //   print("Location Permission is granted");
-                                                      // }else{
-                                                      //   print("Location Permission is denied.");
-                                                      // }
-                                                      // Navigator.push(
-                                                      //     context,
-                                                      //     MaterialPageRoute(
-                                                      //         builder:
-                                                      //             (context) =>
-                                                      //         const QrCodeScannerOne()));
+                                                 
                                                     },
                                                   ),
                                                 ],
@@ -656,18 +629,7 @@ class _GoogleloginPageNewState extends State<GoogleloginPageNew> {
                                                               ),
                                                             ),
                                                             onTap: () async {
-                                                              // if (await Permission.location.request().isGranted) {
-                                                              //   // Either the permission was already granted before or the user just granted it.
-                                                              //   print("Location Permission is granted");
-                                                              // }else{
-                                                              //   print("Location Permission is denied.");
-                                                              // }
-                                                              // Navigator.push(
-                                                              //     context,
-                                                              //     MaterialPageRoute(
-                                                              //         builder:
-                                                              //             (context) =>
-                                                              //         const QrCodeScannerOne()));
+                                                          
                                                             },
                                                           ),
                                                         ],
@@ -688,289 +650,12 @@ class _GoogleloginPageNewState extends State<GoogleloginPageNew> {
                     });
                   }),
             )
-            //  RaisedButton.icon(
-            //   onPressed: () => {
-            // Navigator.push(context,
-            //     MaterialPageRoute(builder: (context) => const Onboarding())),
-            //     setState(() {
-            //       showDialog(
-            //           context: context,
-            //           builder: (context) {
-            //             return AlertDialog(
-            //               title: Text('Camera access',
-            //                   style: GoogleFonts.poppins(
-            //                       color: const Color(0xff212121),
-            //                       fontWeight: FontWeight.w500,
-            //                       fontSize: 20)),
-            //               content: Text(
-            //                   'Do you allow this app to have an access to your camera?',
-            //                   style: GoogleFonts.poppins(
-            //                       color: const Color(0xff786E6E),
-            //                       fontWeight: FontWeight.w400,
-            //                       fontSize: 14)),
-            //               actions: <Widget>[
-            //                 Row(
-            //                   mainAxisAlignment: MainAxisAlignment.spaceAround,
-            //                   children: [
-            //                     Container(
-            //                       decoration: BoxDecoration(
-            //                           border: Border.all(
-            //                               color: const Color(0xffB0A9A9),
-            //                               width: 1),
-            //                           borderRadius: const BorderRadius.all(
-            //                               Radius.circular(8))),
-            //                       height:
-            //                           MediaQuery.of(context).size.height * 0.082,
-            //                       width:
-            //                           MediaQuery.of(context).size.width * 0.350,
-            //                       child: TextButton(
-            //                           onPressed: () {
-            //                             Navigator.pop(context);
-            //                           },
-            //                           child: Text("Deny",
-            //                               style: GoogleFonts.poppins(
-            //                                   color: const Color(0xffB0A9A9),
-            //                                   fontSize: 14,
-            //                                   fontWeight: FontWeight.w500))),
-            //                     ),
-            //                     InkWell(
-            //                       child: Container(
-            //                         alignment: Alignment.center,
-            //                         height: MediaQuery.of(context).size.height *
-            //                             0.082,
-            //                         width:
-            //                             MediaQuery.of(context).size.width * 0.350,
-            //                         decoration: const BoxDecoration(
-            //                             color: Color(0xffCE8C8C),
-            //                             borderRadius: BorderRadius.all(
-            //                                 (Radius.circular(10)))),
-            //                         child: InkWell(
-            //                           child: Text("Allow",
-            //                               style: GoogleFonts.poppins(
-            //                                   color: const Color(0xffFFFFFF),
-            //                                   fontSize: 14,
-            //                                   fontWeight: FontWeight.w600)),
-            //                           onTap: () {
-            //                             showDialog(
-            //                                 context: context,
-            //                                 builder: (context) {
-            //                                   return AlertDialog(
-            //                                     title: Text('Taking pictures',
-            //                                         style: GoogleFonts.poppins(
-            //                                             color: const Color(
-            //                                                 0xff212121),
-            //                                             fontWeight:
-            //                                                 FontWeight.w500,
-            //                                             fontSize: 20)),
-            //                                     content: Text(
-            //                                         'Do you allow this app to take pictures\non your device?',
-            //                                         style: GoogleFonts.poppins(
-            //                                             color: const Color(
-            //                                                 0xff786E6E),
-            //                                             fontWeight:
-            //                                                 FontWeight.w400,
-            //                                             fontSize: 14)),
-            //                                     actions: <Widget>[
-            //                                       Row(
-            //                                         mainAxisAlignment:
-            //                                             MainAxisAlignment
-            //                                                 .spaceAround,
-            //                                         children: [
-            //                                           Container(
-            //                                             decoration: BoxDecoration(
-            //                                                 border: Border.all(
-            //                                                     color: const Color(
-            //                                                         0xffB0A9A9),
-            //                                                     width: 1),
-            //                                                 borderRadius:
-            //                                                     const BorderRadius
-            //                                                             .all(
-            //                                                         Radius
-            //                                                             .circular(
-            //                                                                 8))),
-            //                                             height:
-            //                                                 MediaQuery.of(context)
-            //                                                         .size
-            //                                                         .height *
-            //                                                     0.082,
-            //                                             width:
-            //                                                 MediaQuery.of(context)
-            //                                                         .size
-            //                                                         .width *
-            //                                                     0.350,
-            //                                             child: TextButton(
-            //                                                 onPressed: () {
-            //                                                   Navigator.pop(
-            //                                                       context);
-            //                                                 },
-            //                                                 child: Text("Deny",
-            //                                                     style: GoogleFonts.poppins(
-            //                                                         color: const Color(
-            //                                                             0xffB0A9A9),
-            //                                                         fontSize: 14,
-            //                                                         fontWeight:
-            //                                                             FontWeight
-            //                                                                 .w500))),
-            //                                           ),
-            //                                           InkWell(
-            //                                             child: Container(
-            //                                               alignment:
-            //                                                   Alignment.center,
-            //                                               height: MediaQuery.of(
-            //                                                           context)
-            //                                                       .size
-            //                                                       .height *
-            //                                                   0.082,
-            //                                               width: MediaQuery.of(
-            //                                                           context)
-            //                                                       .size
-            //                                                       .width *
-            //                                                   0.350,
-            //                                               decoration: const BoxDecoration(
-            //                                                   color: Color(
-            //                                                       0xffCE8C8C),
-            //                                                   borderRadius:
-            //                                                       BorderRadius
-            //                                                           .all((Radius
-            //                                                               .circular(
-            //                                                                   10)))),
-            //                                               child: InkWell(
-            //                                                 child: Text("Allow",
-            //                                                     style: GoogleFonts.poppins(
-            //                                                         color: const Color(
-            //                                                             0xffFFFFFF),
-            //                                                         fontSize: 14,
-            //                                                         fontWeight:
-            //                                                             FontWeight
-            //                                                                 .w600)),
-            //                                                 onTap: () {
-            //                                                   Navigator.push(
-            //                                                       context,
-            //                                                       MaterialPageRoute(
-            //                                                           builder:
-            //                                                               (context) =>
-            //                                                                   QrCodeScannerOne()));
-
-            //                                                   // Navigator.push(
-            //                                                   //     context,
-            //                                                   //     MaterialPageRoute(
-            //                                                   //         builder: (context) =>
-            //                                                   //         const QrCodeScannerOne()));
-            //                                                 },
-            //                                               ),
-            //                                             ),
-            //                                             onTap: () async {
-            //                                               // if (await Permission.location.request().isGranted) {
-            //                                               //   // Either the permission was already granted before or the user just granted it.
-            //                                               //   print("Location Permission is granted");
-            //                                               // }else{
-            //                                               //   print("Location Permission is denied.");
-            //                                               // }
-            //                                               // Navigator.push(
-            //                                               //     context,
-            //                                               //     MaterialPageRoute(
-            //                                               //         builder:
-            //                                               //             (context) =>
-            //                                               //         const QrCodeScannerOne()));
-            //                                             },
-            //                                           ),
-            //                                         ],
-            //                                       )
-            //                                     ],
-            //                                   );
-            //                                 });
-            //                           },
-            //                         ),
-            //                       ),
-            //                       onTap: () {},
-            //                     ),
-            //                   ],
-            //                 )
-            //               ],
-            //             );
-            //           });
-            //     })
-            //   },
-            //   shape: const RoundedRectangleBorder(
-            //       side: BorderSide(
-            //         width: 1,
-            //         color: Color(0xffB0A9A9),
-            //       ),
-            //       borderRadius: BorderRadius.all(Radius.circular(40.0))),
-            //   label: Text(
-            //     'Sign up with Google',
-            //     style: GoogleFonts.poppins(
-            //         color: const Color(0xff212121),
-            //         fontSize: 14,
-            //         fontWeight: FontWeight.w500),
-            //   ),
-            //   padding: const EdgeInsets.only(right: 0),
-            //   icon: IconButton(
-            //     padding: const EdgeInsets.only(right: 20),
-            //     icon: Image.asset('assets/images/Group 356.png'),
-            //     iconSize: 30,
-            //     onPressed: () => {_googleLogin()},
-            //   ),
-            //   color: const Color(0xfffffffff),
-            // ),
-            // child: MaterialButton(
-            //   shape: RoundedRectangleBorder(
-            //       borderRadius: BorderRadius.all(Radius.circular(40.0))),
-            //   elevation: 0,
-            //   minWidth: double.maxFinite,
-            //   height: 62,
-            //   onPressed: () => {_googleLogin()},
-            //   color: Color(0xffffffff),
-            //   child: Row(
-            //     mainAxisAlignment: MainAxisAlignment.center,
-            //     children: <Widget>[
-            //       Icon(
-            //         FontAwesomeIcons.googlePay,
-            //         size: 30,
+          
             ),
-        // Container(
-        //   // margin: new EdgeInsets.symmetric(
-        //   //   horizontal: 0.0,
-        //   // ),
-        //   padding: const EdgeInsets.only(
-        //     top: 20,
-        //   ),
-        //   child: Text(
-        //     "or",
-        //     style: GoogleFonts.poppins(
-        //         color: Color(0xff212121),
-        //         fontSize: 14,
-        //         fontWeight: FontWeight.w500),
-        //   ),
-        // ),
+      
 
         const SizedBox(height: 43),
-        // Container(
-        //     height: 62,
-        //     width: 300,
-        //     decoration: BoxDecoration(
-        //         border: Border.all(
-        //           width: 1,
-        //           color: const Color(0xffB0A9A9),
-        //         ),
-        //         borderRadius: const BorderRadius.all(
-        //           Radius.circular(32),
-        //         )),
-        //     child: TextButton(
-        //         onPressed: () {
-        //           Navigator.push(
-        //               context,
-        //               PageTransition(
-        //                   type: PageTransitionType.topToBottom,
-        //                   child: HomePage1()));
-        //         },
-        //         child: Text(
-        //           "Continue as a guest",
-        //           style: GoogleFonts.poppins(
-        //               color: const Color(0xffB0A9A9),
-        //               fontSize: 16,
-        //               fontWeight: FontWeight.w600),
-        //         ))),
+        
         Container(
             padding: const EdgeInsets.only(
               top: 50,
@@ -982,21 +667,7 @@ class _GoogleloginPageNewState extends State<GoogleloginPageNew> {
               const Image(
                 image: AssetImage('assets/images/pattern(1).png'),
               ),
-              // Positioned(
-              //   bottom: 15,
-              //   left: 80,
-              //   child: Column(
-              //     children: <Widget>[
-              //       Text(
-              //         "Have a code from a friend?",
-              //         style: GoogleFonts.poppins(
-              //             color: const Color(0xffCE8C8C),
-              //             fontSize: 14,
-              //             fontWeight: FontWeight.w500),
-              //       ),
-              //     ],
-              //   ),
-              // )
+          
             ]))
       ])),
     );

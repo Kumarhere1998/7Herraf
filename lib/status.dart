@@ -661,7 +661,6 @@ class _MyHomePage1State extends State<MyHomePage1> {
                                                   postAddress)
                                               .then((value) {
                                             var res = value;
-                                            print(res);
 
                                             Navigator.push(
                                                 context,
@@ -694,127 +693,9 @@ class _MyHomePage1State extends State<MyHomePage1> {
                                               fontSize: 17,
                                               fontWeight: FontWeight.w600)),
                                     )),
-                                //     Container(
-                                //       decoration:
-                                //           const BoxDecoration(color: Color(0xff2F80ED)),
-                                //       child: ElevatedButton(
-                                //           onPressed: () async {
-
-                                //             if (_formKey.currentState!.validate()) {
-                                //               // If the form is valid, display a snackbar. In the real world,
-                                //               // you'd often call a server or save the information in a database.
-                                //               ScaffoldMessenger.of(context).showSnackBar(
-                                //                 const SnackBar(
-                                //                     content: Text('Processing Data')),
-                                //               );
-
-                                //               SharedPreferences prefs =
-                                //                   await SharedPreferences.getInstance();
-                                //               setState(() {
-                                //                 postAddress.name = nameController.text;
-                                //                 postAddress.address =
-                                //                     addressController.text;
-                                //                 postAddress.user_id =
-                                //                     prefs.getString("user_id").toString();
-                                //                 postAddress.email = emailController.text;
-                                //                 postAddress.city = cityController.text;
-                                //                 postAddress.phone_no =
-                                //                     phoneController.text;
-                                //                 postAddress.zipcode = zipController.text;
-                                //                 postAddress.state = stateController.text;
-
-                                //                 ApiService.postaddressData(postAddress)
-                                //                     .then((value) {
-                                //                   var res = value;
-                                //                   print(res);
-
-                                //             Navigator.push(
-                                //                 context,
-                                //                 MaterialPageRoute(
-                                //                   builder: (context) => MyHomePage1(),
-                                //                 ));
-
-                                //             //       ScaffoldMessenger.of(context)
-                                //             //           .showSnackBar(const SnackBar(
-                                //             //               content: Text("submitted")));
-                                //             //     });
-                                //             //   });
-                                //             // }
-                                //           },
-                                //           child: SizedBox(
-                                //             width: MediaQuery.of(context).size.width / 2.7,
-                                //             height: MediaQuery.of(context).size.height / 15,
-                                //             child: Row(
-                                //               mainAxisAlignment:
-                                //                   MainAxisAlignment.spaceAround,
-                                //               children: [
-                                //                 Text("Submit",
-                                //                     style: GoogleFonts.poppins(
-                                //                         fontSize: 17,
-                                //                         fontWeight: FontWeight.w600)),
-                                //                 const Icon(
-                                //                   Icons.arrow_forward,
-                                //                   size: 22,
-                                //                 )
-                                //               ],
-                                //             ),
-
-                                //     )
-                                //   ],
-                                // ),
+                               
                               ])
-                          // SizedBox(
-                          //   height: 56,
-                          //   width: 331,
-                          //   child: DropdownButtonFormField<String>(
-                          //     value: dropdownValue,
-                          //     icon: const Icon(
-                          //       Icons.keyboard_arrow_down_rounded,
-                          //       size: 35,
-                          //     ),
-                          //     elevation: 2,
-                          //     style: TextStyle(
-                          //         color:
-                          //             const Color(0xff333333).withOpacity(0.6)),
-                          //     decoration: InputDecoration(
-                          //       filled: true,
-                          //       fillColor: Colors.white,
-                          //       enabledBorder: OutlineInputBorder(
-                          //         borderSide: const BorderSide(
-                          //             color: Colors.grey, width: 0),
-                          //         borderRadius: BorderRadius.circular(32.7),
-                          //       ),
-                          //       focusedBorder: OutlineInputBorder(
-                          //         borderSide: const BorderSide(
-                          //             color: Color(0xffB0A9A9), width: 0),
-                          //         borderRadius: BorderRadius.circular(32.7),
-                          //       ),
-                          //       border: OutlineInputBorder(
-                          //         borderRadius: BorderRadius.circular(10),
-                          //       ),
-                          //       // hintText: 'Username',
-                          //       hintStyle: GoogleFonts.poppins(
-                          //           color: Color(0x80343434),
-                          //           fontSize: 14,
-                          //           fontWeight: FontWeight.w500),
-                          //       // hintStyle: const TextStyle(
-                          //       //     color: Color(0x80343434),
-                          //       //     fontWeight: FontWeight.bold)
-                          //     ),
-                          //     onChanged: (String? value) {
-                          //       // This is called when the user selects an item.
-                          //       setState(() {
-                          //         dropdownValue = value!;
-                          //       });
-                          //     },
-                          //     items: list.map((String value) {
-                          //       return DropdownMenuItem<String>(
-                          //         value: value,
-                          //         child: Text(value),
-                          //       );
-                          //     }).toList(),
-                          //   ),
-                          // )
+                          
                           ),
                     ]),
                   ])),

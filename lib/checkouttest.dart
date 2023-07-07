@@ -722,7 +722,6 @@ class _CheckOutOneState extends State<CheckOutOne> {
                                       ApiService.postaddressData(postAddress)
                                           .then((value) {
                                         var res = value;
-                                        print(res);
 
                                         Navigator.push(
                                             context,
@@ -737,62 +736,9 @@ class _CheckOutOneState extends State<CheckOutOne> {
                                       });
                                     });
                                   }
-                                  // if (nameController.text.isEmpty ||
-                                  //         emailController.text.isEmpty ||
-                                  //         phoneController.text.isEmpty ||
-                                  //         addressController.text.isEmpty ||
-                                  //         zipController.text.isEmpty ||
-                                  //         cityController.text.isEmpty ||
-                                  //         stateController.text.isEmpty
-                                  //     // countryController.text.isEmpty
-                                  //     ) {
-                                  //   showDialog(
-                                  //     context: context,
-                                  //     builder: (ctx) => AlertDialog(
-                                  //       title: const Text("Alert"),
-                                  //       content: const Text(
-                                  //           "All fields are mendatory"),
-                                  //       actions: <Widget>[
-                                  //         TextButton(
-                                  //           onPressed: () {
-                                  //             Navigator.of(ctx).pop();
-                                  //           },
-                                  //           child: Container(
-                                  //             color: const Color(0xff0093ED),
-                                  //             padding: const EdgeInsets.all(14),
-                                  //             child: const Text("okay",
-                                  //                 style: TextStyle(
-                                  //                     color:
-                                  //                         Color(0xffFFFFFF))),
-                                  //           ),
-                                  //         ),
-                                  //       ],
-                                  //     ),
-                                  //   );
-                                  // }
-                                  // else {
-                                  //   setState(() {
-                                  //     ApiService.postaddressData(context);
-                                  //     // print("$Response");
-                                  //     // print("${URLS.API_URL}");
-                                  //     Navigator.push(
-                                  //         context,
-                                  //         MaterialPageRoute(
-                                  //             builder: (context) =>
-                                  //                 const CheckoutTwo()));
-                                  //   });
-                                  // }
-
-                                  // ? _validate = true
-                                  // : _validate = false;
+                              
                                 }
-                                //       checkTextFieldEmptyOrNot();
-                                //   Navigator.push(
-                                //       context,
-                                //       MaterialPageRoute(
-                                //           builder: (context) =>
-                                //           const CheckoutTwo()));
-                                // },
+                                
                                 ,
                                 child: SizedBox(
                                   width:

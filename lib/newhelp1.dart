@@ -228,7 +228,6 @@ class _HelpPageState extends State<HelpPage> {
                         ),
                       ),
                       onTap: () {
-                        print("Pressed");
                         Navigator.push(
                             context,
                             MaterialPageRoute(

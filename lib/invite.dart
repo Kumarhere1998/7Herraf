@@ -1,13 +1,12 @@
-// ignore_for_file: prefer_const_constructors, unnecessary_null_comparison
+// ignore_for_file: prefer_const_constructors, unnecessary_null_comparison, must_be_immutable
 
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:herraf_app/ClassicGame.dart';
 import 'package:herraf_app/api_servivce.dart';
-import 'package:herraf_app/game.dart';
 import 'package:herraf_app/invitetoggle.dart';
 import 'package:page_transition/page_transition.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 
@@ -20,11 +19,11 @@ class InvitefriendPage extends StatefulWidget {
 
   InvitefriendPage({
     this.gameFriend,
-    super.key,
     this.packname = '',
     this.packid = 0,
     this.Id = 0,
     this.packID = 0,
+    super.key,
   });
 
   @override
@@ -34,12 +33,12 @@ class InvitefriendPage extends StatefulWidget {
 class _InvitefriendPageState extends State<InvitefriendPage> {
   List<dynamic> groupUsers = [];
   List<String> GameMode = ['Single', '2X2'];
+  Map? result = {};
 
   int a = 2;
   int a2 = 2;
   int a2Length = 0;
-  int player = 0;
-
+  // bool invitedFriend = false;
   void _incrementCounter() {
     setState(() {
       a++;
@@ -69,44 +68,31 @@ class _InvitefriendPageState extends State<InvitefriendPage> {
       });
   }
 
-  void _playerCount() {
-    setState(() {
-      player++;
-    });
-  }
-
   bool showSpinner = false;
   int currentPage = 0;
-
   var profileData;
   bool valuefirst = false;
   bool valuesecond = false;
-
   String user_photo = "";
+  bool urlImage = false;
+  String opponentsImage = '';
+  bool imageLoader = true;
+  List<dynamic> userData = [];
 
   var box;
 
   @override
   void initState() {
     _getUserInfo();
-    print(widget.gameFriend);
     if (widget.gameFriend != null) {
       setState(() {
         groupUsers.add(widget.gameFriend);
       });
     }
-
-    if (widget.Id > 10) {
-      _findingFriend();
-    }
+    // if (widget.Id > 10) {
+    //   _findingFriend();
+    // }
     super.initState();
-  }
-
-  _getUserInfo() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      user_photo = prefs.getString("photo")!;
-    });
   }
 
   bool isSwitched = false;
@@ -118,63 +104,86 @@ class _InvitefriendPageState extends State<InvitefriendPage> {
         isSwitched = true;
         textValue = 'Switch Button is ON';
       });
-      print('Switch Button is ON');
     } else {
       setState(() {
         isSwitched = false;
 
         textValue = 'Switch Button is OFF';
       });
-      print('Switch Button is OFF');
     }
   }
 
   late Timer mytimer;
   _startPartnerFindingTimer() {
     mytimer = Timer.periodic(const Duration(seconds: 10), (timer) {
-      print("CALLING ME EVERY 10 SECONDS");
       _findYourPartner();
       //code to run on every 5 seconds
     });
   }
 
-  _findingFriend() {
+  _findingFriend(notificationID) {
     mytimer = Timer.periodic(const Duration(seconds: 10), (timer) async {
-      print("CALLING ME EVERY 10 SECONDS");
-      // print('Which ID==>${id}');
-
-      await ApiService.findingFriend(widget.Id).then((value) {
-        print('ACCEPTEDFRIEND ==>$value');
-        // print(value);
-        if (value["status"] == true) {
+      await ApiService.findingFriend(notificationID).then((value) {
+        if (value["status"]) {
+          _getUserInfo();
           for (var i = 0; i < value["data"].length; i++) {
-            if (mounted) {
+            opponentsImage = value["data"][i]["user_image"];
+            if (opponentsImage.contains("http") ||
+                opponentsImage.toString().contains("https")) {
               setState(() {
+                urlImage = true;
                 groupUsers.add({
                   "id": value["data"][i]["id"],
-                  "image": value["data"][i]["user_image"],
+                  "image": opponentsImage,
                   "group_id": value["game_group_id"],
                 });
               });
-
+            } else {
+              groupUsers.add({
+                "id": value["data"][i]["id"],
+                "image": opponentsImage,
+                "group_id": value["game_group_id"],
+              });
+            }
+            if (mounted) {
               if (groupUsers.length > 0) {
-                print(groupUsers);
-                print("CALLEXIT");
                 mytimer.cancel();
                 Navigator.pop(context);
               }
             }
           }
-          print("COMING HERE");
         }
       });
     });
   }
 
+  _getUserInfo() {
+    ApiService.userDetails().then((value) {
+      userData = value['data'];
+      user_photo = userData[0]['user_image'];
+      if (user_photo.contains("http") || user_photo.contains("https")) {
+        setState(() {
+          user_photo = userData[0]['user_image'];
+          imageLoader = false;
+          urlImage = true;
+        });
+      } else {
+        setState(() {
+          user_photo = '${URLS.IMAGE_URL}/${userData[0]['user_image']}';
+          imageLoader = false;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    mytimer.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // print('FRIEND IMAGE==>${widget.gameFriend!['image']}');
-    // print('Which ID ==>${widget.packID}');
     return Scaffold(
         backgroundColor: Color(0xffE5E5E5),
         body: SafeArea(
@@ -258,7 +267,6 @@ class _InvitefriendPageState extends State<InvitefriendPage> {
                     setState(() {
                       currentPage = index!;
                     });
-                    print("Switch to: ${GameMode[index!]}");
                   },
                 )),
                 Container(
@@ -270,7 +278,6 @@ class _InvitefriendPageState extends State<InvitefriendPage> {
                         child: InkWell(
                           onTap: () {
                             _startPartnerFindingTimer();
-
                             setState(() {
                               showDialog(
                                   barrierDismissible: false,
@@ -278,7 +285,6 @@ class _InvitefriendPageState extends State<InvitefriendPage> {
                                   builder: (context) {
                                     Future.delayed(Duration(minutes: 5), () {
                                       mytimer.cancel();
-                                      print("EXITNGME");
                                       Navigator.of(context).pop(true);
                                     });
                                     return AlertDialog(
@@ -329,8 +335,6 @@ class _InvitefriendPageState extends State<InvitefriendPage> {
                                                                     .zero),
                                                             onEnd: () {
                                                               mytimer.cancel();
-                                                              print(
-                                                                  'Timer ended');
                                                             },
                                                             builder:
                                                                 (BuildContext
@@ -433,14 +437,12 @@ class _InvitefriendPageState extends State<InvitefriendPage> {
                     : Container(
                         child: InkWell(
                           onTap: () {
-                            _playerCount();
-                            // print('PlayerCount==>$player');
                             Navigator.push(
                                 context,
                                 PageTransition(
                                     type: PageTransitionType.topToBottom,
-                                    child: Game(
-                                        groupUsers[0], widget.packid, player)));
+                                    child: ClassicGameScreen(
+                                        groupUsers[0], widget.packid)));
                           },
                           child: Container(
                             margin: new EdgeInsets.symmetric(
@@ -473,7 +475,6 @@ class _InvitefriendPageState extends State<InvitefriendPage> {
   }
 
   Widget FirstPageWidget() {
-    // print(GameMode[0]);
     return Container(
         child: Column(
       children: <Widget>[
@@ -519,68 +520,188 @@ class _InvitefriendPageState extends State<InvitefriendPage> {
           ],
         )),
         Container(
+            // color: Colors.amber,
             child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Container(
-              width: MediaQuery.of(context).size.width * 0.28,
-              height: MediaQuery.of(context).size.height * 0.12,
-              child: user_photo == null
-                  ? Image(image: AssetImage('assets/images/user1.png'))
-                  : Image(
-                      image: NetworkImage(user_photo),
-                      fit: BoxFit.cover,
-                    ),
-            ),
+            imageLoader
+                ? CircularProgressIndicator()
+                : urlImage
+                    ? Container(
+                        width: MediaQuery.of(context).size.width * 0.30,
+                        height: MediaQuery.of(context).size.height * 0.13,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          image: DecorationImage(
+                              image: NetworkImage('$user_photo'),
+                              fit: BoxFit.cover),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      )
+                    : Container(
+                        width: MediaQuery.of(context).size.width * 0.30,
+                        height: MediaQuery.of(context).size.height * 0.13,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          image: DecorationImage(
+                              image: NetworkImage('${user_photo}'),
+                              fit: BoxFit.cover),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
             if (groupUsers.length == 0) ...[
               InkWell(
-                onTap: () {
-                  Navigator.of(context).push(MaterialPageRoute(
+                onTap: () async {
+                  var result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
                       builder: (context) => InvitetoggleApp(
-                            GameMode: GameMode[0],
-                            packname: widget.packname,
-                            packId: widget.packid,
-                            // packId: widget.packid,
-                          )));
+                          GameMode: GameMode[0],
+                          packname: widget.packname,
+                          packId: widget.packid,
+                          inviteFriend: true),
+                    ),
+                  );
+                  setState(() {
+                    _findingFriend(result['notification_id']);
+                  });
+
+                  showDialog(
+                      barrierDismissible: false,
+                      context: context,
+                      builder: (context) {
+                        Future.delayed(Duration(minutes: 5), () {
+                          mytimer.cancel();
+                          Navigator.of(context).pop;
+                        });
+                        return AlertDialog(
+                          backgroundColor: const Color(0xffFAFAFA),
+                          content: Container(
+                              height: MediaQuery.of(context).size.height * 0.21,
+                              width: MediaQuery.of(context).size.width * 0.50,
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 10),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.watch_later_outlined,
+                                              size: 25,
+                                              color: Color(0xffCE8C8C),
+                                            ),
+                                            SizedBox(
+                                              width: 5,
+                                            ),
+                                            TweenAnimationBuilder<Duration>(
+                                                duration:
+                                                    const Duration(minutes: 5),
+                                                tween: Tween(
+                                                    begin: const Duration(
+                                                        minutes: 5),
+                                                    end: Duration.zero),
+                                                onEnd: () {
+                                                  mytimer.cancel();
+                                                  Navigator.of(context).pop;
+                                                },
+                                                builder: (BuildContext context,
+                                                    Duration value,
+                                                    Widget? child) {
+                                                  final minutes =
+                                                      value.inMinutes;
+                                                  final seconds =
+                                                      value.inSeconds % 60;
+
+                                                  return Padding(
+                                                      padding: const EdgeInsets
+                                                              .symmetric(
+                                                          vertical: 5),
+                                                      child: Text(
+                                                          '$minutes : $seconds',
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: const TextStyle(
+                                                              color: Color(
+                                                                  0xff00253A),
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              fontSize: 18)));
+                                                }),
+                                          ],
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.close,
+                                          color: Color(0xffCE8C8C),
+                                        ),
+                                        onPressed: () {
+                                          Navigator.of(context).pop(true);
+                                          mytimer.cancel();
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                  Container(
+                                    margin: EdgeInsets.only(top: 15),
+                                    child: CircularProgressIndicator(
+                                      color: Color(0xffCE8C8C),
+                                    ),
+                                  ),
+                                  Container(
+                                    margin: EdgeInsets.only(top: 30),
+                                    child: Text(
+                                      "Waiting for your friend to join.",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ],
+                              )),
+                        );
+                      });
                 },
                 child: Container(
                   child: Image.asset(
                     'assets/images/user1.png',
                     width: MediaQuery.of(context).size.width * 0.30,
-                    height: MediaQuery.of(context).size.height * 0.14,
+                    height: MediaQuery.of(context).size.height * 0.13,
                   ),
                   // <-- SEE
                 ),
               )
             ],
             for (var i = 0; i < groupUsers.length; i++) ...[
-              Container(
-                child: groupUsers[i]["image"] == ''
-                    ? Container(
-                        width: MediaQuery.of(context).size.width * 0.28,
-                        height: MediaQuery.of(context).size.height * 0.12,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                              image: AssetImage('assets/images/user1.png'),
-                              fit: BoxFit.cover),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        // child: Image.network(groupUsers[i]["image"]),
-                      )
-                    : Container(
-                        width: MediaQuery.of(context).size.width * 0.28,
-                        height: MediaQuery.of(context).size.height * 0.12,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                              image: NetworkImage(groupUsers[i]["image"]),
-                              fit: BoxFit.cover),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        // child: Image.network(widget.gameFriend!['image']),
+              urlImage
+                  ? Container(
+                      width: MediaQuery.of(context).size.width * 0.28,
+                      height: MediaQuery.of(context).size.height * 0.13,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                            image: NetworkImage('${groupUsers[i]['image']}'),
+                            fit: BoxFit.cover),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                // <-- SEE
-              )
+                    )
+                  : Container(
+                      width: MediaQuery.of(context).size.width * 0.28,
+                      height: MediaQuery.of(context).size.height * 0.13,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                            image: NetworkImage(
+                                '${URLS.IMAGE_URL}/${groupUsers[i]['image']}'),
+                            fit: BoxFit.cover),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      // child: Image.network(widget.gameFriend!['image']),
+                    ),
             ]
           ],
         )),
@@ -589,8 +710,6 @@ class _InvitefriendPageState extends State<InvitefriendPage> {
   }
 
   Widget SecondWidget() {
-    // print(GameMode[1]);
-
     return Column(
       children: <Widget>[
         Container(
@@ -639,21 +758,27 @@ class _InvitefriendPageState extends State<InvitefriendPage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Container(
-              child: Image.network(user_photo),
-              width: MediaQuery.of(context).size.width * 0.30,
-              height: MediaQuery.of(context).size.height * 0.14,
-            ),
+            imageLoader
+                ? CircularProgressIndicator()
+                : urlImage
+                    ? Container(
+                        width: MediaQuery.of(context).size.width * 0.30,
+                        height: MediaQuery.of(context).size.height * 0.14,
+                        child: Image.network(user_photo),
+                      )
+                    : Container(
+                        width: MediaQuery.of(context).size.width * 0.30,
+                        height: MediaQuery.of(context).size.height * 0.14,
+                        child: Image.network("${user_photo}"),
+                      ),
             InkWell(
               onTap: () {
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => InvitetoggleApp(
-                          GameMode: GameMode[1],
-                          packname: widget.packname,
-                          packId: widget.packid,
-
-                          // packId: widget.packid,
-                        )));
+                        GameMode: GameMode[1],
+                        packname: widget.packname,
+                        packId: widget.packid,
+                        inviteFriend: true)));
               },
               child: Container(
                 child: Image.asset(
@@ -685,12 +810,10 @@ class _InvitefriendPageState extends State<InvitefriendPage> {
                               onTap: () {
                                 Navigator.of(context).push(MaterialPageRoute(
                                     builder: (context) => InvitetoggleApp(
-                                          GameMode: GameMode[1],
-                                          packname: widget.packname,
-                                          packId: widget.packid,
-
-                                          // packId: widget.packid,
-                                        )));
+                                        GameMode: GameMode[1],
+                                        packname: widget.packname,
+                                        packId: widget.packid,
+                                        inviteFriend: true)));
                               },
                               child: Container(
                                 child: Image.asset(
@@ -704,15 +827,12 @@ class _InvitefriendPageState extends State<InvitefriendPage> {
                             ),
                             InkWell(
                               onTap: () {
-                                print('PackIdOn${widget.packid}');
                                 Navigator.of(context).push(MaterialPageRoute(
                                     builder: (context) => InvitetoggleApp(
-                                          packname: widget.packname,
-                                          packId: widget.packid,
-
-                                          // packId: widget.packid,
-                                          GameMode: GameMode[1],
-                                        )));
+                                        packname: widget.packname,
+                                        packId: widget.packid,
+                                        GameMode: GameMode[1],
+                                        inviteFriend: true)));
                               },
                               child: Container(
                                 child: Image.asset(
@@ -735,30 +855,41 @@ class _InvitefriendPageState extends State<InvitefriendPage> {
   }
 
   _findYourPartner() async {
-    print(widget.packid);
     SharedPreferences pref = await SharedPreferences.getInstance();
     ApiService.randomgame(pref.getString('user_id'), widget.packid)
         .then((value) {
-      print('Here==>$value');
       if (value["status"]) {
-        //partner_image = value["user_image"];
-        //  for (var i = 0; i < value["data"].length; i++) {
+        opponentsImage = value["data"]["user_image"];
+        if (opponentsImage.contains("http") ||
+            value.toString().contains("https")) {
+          setState(() {
+            urlImage = true;
+            groupUsers.add({
+              "id": value["data"]["id"],
+              "image": opponentsImage,
+              "group_id": value["game_group_id"],
+            });
+          });
+        } else {
+          groupUsers.add({
+            "id": value["data"]["id"],
+            "image": opponentsImage,
+            "group_id": value["game_group_id"],
+          });
+        }
         if (mounted) {
           setState(() {
             groupUsers.add({
               "id": value["data"]["id"],
-              "image": value["data"]["user_image"],
+              // "image": value["data"]["user_image"],
+              "image": opponentsImage,
               "group_id": value["group_id"],
             });
           });
-
           if (groupUsers.length > 0) {
-            print(groupUsers);
-            print("CALLEXIT");
             mytimer.cancel();
             Navigator.pop(context);
           }
-          //  }
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

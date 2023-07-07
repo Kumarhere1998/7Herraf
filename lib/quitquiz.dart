@@ -14,7 +14,9 @@ class Quitquiz extends StatefulWidget {
   @override
   _QuitquizState createState() => _QuitquizState();
 }
+
 bool _hasBeenPressed = false;
+
 class _QuitquizState extends State<Quitquiz> {
   final String message = '';
   late PageController _pageController;
@@ -49,6 +51,7 @@ class _QuitquizState extends State<Quitquiz> {
   }
 
   _answerChecking(option) async {
+    print(option);
     print('Acrronym = ${widget.acronyms!["id"]}');
     ApiService.checking_answer(
       widget.groupId,
@@ -56,14 +59,13 @@ class _QuitquizState extends State<Quitquiz> {
       selectedOption.join(' '),
     ).then((value) {
       setState(() {
-        print(value);
         if (selectedOption.isEmpty) {
           Text("Please Select the options");
         } else {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => FailPage(value['message'], false,false)),
+                builder: (context) => FailPage(value['message'], false, false)),
           );
         }
       });
@@ -72,9 +74,7 @@ class _QuitquizState extends State<Quitquiz> {
 
   _leaveGame() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    ApiService.leaveGame(prefs.get('user_id'), widget.groupId).then((value) {
-      print(value);
-    });
+    ApiService.leaveGame(prefs.get('user_id'), widget.groupId).then((value) {});
     Navigator.push(
         context,
         MaterialPageRoute(
@@ -96,7 +96,6 @@ class _QuitquizState extends State<Quitquiz> {
   }
 
   _selectedOption(option) {
-    print(option);
     setState(() {
       selectedOption.add(option);
     });
@@ -104,9 +103,6 @@ class _QuitquizState extends State<Quitquiz> {
 
   @override
   Widget build(BuildContext context) {
-    // print('GI==>${widget.groupId}');
-
-    print(widget.groupId);
     return Scaffold(
       appBar: AppBar(
           backgroundColor: Color(0xffDADADA),
@@ -255,9 +251,7 @@ class _QuitquizState extends State<Quitquiz> {
                               tween: Tween(
                                   begin: const Duration(minutes: 3),
                                   end: Duration.zero),
-                              onEnd: () {
-                                print('Timer ended');
-                              },
+                              onEnd: () {},
                               builder: (BuildContext context, Duration value,
                                   Widget? child) {
                                 final minutes = value.inMinutes;
@@ -449,8 +443,6 @@ class _QuitquizState extends State<Quitquiz> {
                                               duration:
                                                   Duration(milliseconds: 500),
                                               curve: Curves.ease);
-                                          // print(
-                                          //     "${currentIndex}_${acronym.length}");
                                         }
                                       });
                                       _selectedOption(quizOption[index]);
@@ -494,7 +486,6 @@ class _QuitquizState extends State<Quitquiz> {
                     onTap: () {
                       setState(() {
                         if (selectedOption.isEmpty) {
-                          // print('Please select the options');
                           showDialog(
                               context: context,
                               builder: (context) {

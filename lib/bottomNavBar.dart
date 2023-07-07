@@ -29,7 +29,7 @@ class _BottomNavState extends State<BottomNav> {
 
   _ratingUpdate() async {
     ApiService.updaterating(rating, ratingController.text).then((value) {
-      print(value);
+
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(value['message'])));
       if (value['status']) {
@@ -41,16 +41,14 @@ class _BottomNavState extends State<BottomNav> {
 
   _appReview() async {
     ApiService.app_review().then((value) {
-      // print(value);
+     
 
       setState(() {
         reviewData = {};
         reviewData = value;
         if (reviewData['status'] == true) {
-          print('true');
           SystemNavigator.pop();
         } else {
-          print('false');
           showDialog(
               context: context,
               builder: (ctx) => StatefulBuilder(
@@ -120,7 +118,7 @@ class _BottomNavState extends State<BottomNav> {
                                     onRatingUpdate: (value) {
                                       setState(() {
                                         rating = value;
-                                        print(rating);
+                                     
                                       });
                                     },
                                   ),
@@ -168,7 +166,7 @@ class _BottomNavState extends State<BottomNav> {
                                                         fontWeight:
                                                             FontWeight.w500)),
                                               ),
-                                              FlatButton(
+                                              ElevatedButton(
                                                   onPressed: () {
                                                     _ratingUpdate();
                                                   },
@@ -189,7 +187,6 @@ class _BottomNavState extends State<BottomNav> {
           // : SystemNavigator.pop();
 
         }
-        print('REVIEW==>$reviewData');
         // loading = false;
       });
     });
@@ -209,7 +206,7 @@ class _BottomNavState extends State<BottomNav> {
 
   _onItemTapped(int index) {
     _selectedIndex = index;
-    // print(_selectedIndex);
+
     setState(() {});
     switch (_selectedIndex) {
       case 0:
@@ -235,9 +232,6 @@ class _BottomNavState extends State<BottomNav> {
           context, MaterialPageRoute(builder: (context) => BottomNav(2)));
       _appReview();
     }
-    // else {
-    //   SystemNavigator.pop();
-    // }
 
     return true;
   }
@@ -250,61 +244,69 @@ class _BottomNavState extends State<BottomNav> {
           body: _onItemTapped(_selectedIndex),
           bottomNavigationBar: Stack(
             children: [
-              SizedBox(
-                height: 70,
-                child: BottomNavigationBar(
-                  showUnselectedLabels: false,
-                  type: BottomNavigationBarType.fixed,
-                  currentIndex: _selectedIndex,
-                  selectedItemColor: Colors.black,
-                  unselectedItemColor: Color.fromARGB(255, 217, 216, 216),
-                  backgroundColor: Colors.white,
-                  items: [
-                    BottomNavigationBarItem(
-                      icon: ImageIcon(
-                        AssetImage('assets/images/bottom2.png'),
+
+              Container(
+                
+                height: MediaQuery.of(context).size.height*.109,
+                margin: EdgeInsets.only(top: 0),
+                child: SizedBox(
+                  height: 70,
+                  
+                  child: BottomNavigationBar(
+                    
+                    showUnselectedLabels: false,
+                    type: BottomNavigationBarType.fixed,
+                    currentIndex: _selectedIndex,
+                    selectedItemColor: Colors.black,
+                    unselectedItemColor: Color.fromARGB(255, 217, 216, 216),
+                    backgroundColor: Colors.white,
+                    items: [
+                      BottomNavigationBarItem(
+                        icon: ImageIcon(
+                          AssetImage('assets/images/bottom2.png'),
+                        ),
+                        label: '',
                       ),
-                      label: '',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: ImageIcon(
-                        AssetImage('assets/images/bottom.png'),
+                      BottomNavigationBarItem(
+                        icon: ImageIcon(
+                          AssetImage('assets/images/bottom.png'),
+                        ),
+                        label: '',
                       ),
-                      label: '',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          ImageIcon(
-                            AssetImage('assets/images/BG1.png'),
-                            size: 63,
-                          ),
-                          Positioned(
-                            top: 10,
-                            child: SizedBox(
-                                height: 55,
-                                width: 60,
-                                child: Image.asset('assets/images/BG2.png')),
-                          )
-                        ],
+                      BottomNavigationBarItem(
+                        icon: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            ImageIcon(
+                              AssetImage('assets/images/BG1.png'),
+                              size: 56,
+                            ),
+                            Positioned(
+                              top: 10,
+                              child: SizedBox(
+                                  height: 55,
+                                  width: 60,
+                                  child: Image.asset('assets/images/BG2.png')),
+                            )
+                          ],
+                        ),
+                        label: '',
                       ),
-                      label: '',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: ImageIcon(
-                        AssetImage('assets/images/bottom4.png'),
+                      BottomNavigationBarItem(
+                        icon: ImageIcon(
+                          AssetImage('assets/images/bottom4.png'),
+                        ),
+                        label: '',
                       ),
-                      label: '',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: ImageIcon(
-                        AssetImage('assets/images/bottom3.png'),
+                      BottomNavigationBarItem(
+                        icon: ImageIcon(
+                          AssetImage('assets/images/bottom3.png'),
+                        ),
+                        label: '',
                       ),
-                      label: '',
-                    ),
-                  ],
-                  onTap: _onItemTapped,
+                    ],
+                    onTap: _onItemTapped,
+                  ),
                 ),
               ),
             ],

@@ -26,7 +26,8 @@ class PracticeGame extends StatefulWidget {
 class _PracticeGameState extends State<PracticeGame>
     with TickerProviderStateMixin {
   double containerPosition = 0.0;
-
+  Timer? countdownTimer;
+  Duration myDuration = Duration(minutes: 1);
   bool isCPU = false;
   bool isCPUSpelling = false;
   bool isobserving = false;
@@ -38,6 +39,9 @@ class _PracticeGameState extends State<PracticeGame>
   int? REMAININGCARDS = 0;
   bool turn = false;
   bool herrafBotton = false;
+  bool cpuChoosingOptions = false;
+  int? optionTime;
+
   String gameWinner = '';
 
   late IO.Socket socket;
@@ -79,8 +83,7 @@ class _PracticeGameState extends State<PracticeGame>
   ];
   List<dynamic> addOneCard = [];
   var index;
-  var optionTime;
-
+  double angle = -0.7;
   final cpuTooltipController = JustTheController();
   final humanTooltipController = JustTheController();
 
@@ -95,9 +98,6 @@ class _PracticeGameState extends State<PracticeGame>
   late AnimationController cpuCardController;
   late Animation<Offset> cpuOffset;
 
-  double offSetEndXPoint = -4.0;
-  double offSetEndYPoint = 6.0;
-
   bool showRemainingHiddenCard = false;
   bool showMyHiddenCard = false;
   bool showCPUHiddenCard = false;
@@ -110,6 +110,8 @@ class _PracticeGameState extends State<PracticeGame>
     // _soundStop();
     _getUserInfo();
     getDeckCards(widget.groupId);
+    startTimer();
+
     super.initState();
 
     controller =
@@ -130,6 +132,7 @@ class _PracticeGameState extends State<PracticeGame>
     myCardOffset =
         Tween<Offset>(begin: Offset(0.0, 0.0), end: Offset(0.0, -2.4))
             .animate(myCardController);
+
     myCardController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         myCardController.reset();
@@ -153,6 +156,46 @@ class _PracticeGameState extends State<PracticeGame>
     });
   }
 
+  void startTimer() {
+    countdownTimer =
+        Timer.periodic(Duration(seconds: 1), (_) => setCountDown());
+  }
+
+  void resetTimer() {
+    stopTimer();
+    setState(() => myDuration = Duration(minutes: 1));
+  }
+
+  void stopTimer() {
+    setState(() => countdownTimer!.cancel());
+  }
+
+  void setCountDown() {
+    final reduceSecondsBy = 1;
+    setState(() {
+      final seconds = myDuration.inSeconds - reduceSecondsBy;
+      if (seconds < 0) {
+        countdownTimer!.cancel();
+        setState(() {
+          if (turn == true) {
+            setState(() {
+              turn = false;
+            });
+          } else {
+            setState(() {
+              turn = true;
+            });
+          }
+          resetTimer();
+          startTimer();
+          _CpuTurn();
+        });
+      } else {
+        myDuration = Duration(seconds: seconds);
+      }
+    });
+  }
+
   initSocket() {
     socket = IO.io("http://165.22.215.103:4000", <String, dynamic>{
       'autoConnect': false,
@@ -172,26 +215,27 @@ class _PracticeGameState extends State<PracticeGame>
         chatMessage = newMessage["message"];
       });
 
-      print("MYM_${newMessage["message"]}");
     });
+  }
+
+  _turnChangeTimer() {
+    resetTimer();
+    startTimer();
   }
 
   _cardColor(imageColor) {
     setState(() {
       cardColor = imageColor;
-      print('Image==>$cardColor');
     });
   }
 
   _cardColorCPU(imageColor) {
     setState(() {
       cardColorCPU = imageColor;
-      print('Image==>$cardColorCPU');
     });
   }
   // _gameSound() async {
   //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   print("MUSIC==> ${prefs.getBool('music')!}");
   //   if (prefs.getBool('music') == true) {
   //     AudioPlayer().play(AssetSource('sound/GameSound.mp3'));
   //   }
@@ -207,7 +251,6 @@ class _PracticeGameState extends State<PracticeGame>
     setState(() {
       user_photo = prefs.getString("photo")!;
       humanUserId = prefs.getString("user_id")!;
-      // print(widget.partnerdata!["id"]);
     });
   }
 
@@ -215,7 +258,6 @@ class _PracticeGameState extends State<PracticeGame>
     SharedPreferences prefs = await SharedPreferences.getInstance();
     ApiService.practiceGameWinner(prefs.get('user_id'), widget.groupId)
         .then((value) {
-      print('GAMEWINNER==> $value');
       // setState(() {
       gameWinner = value['message'];
       if (value['status']) {
@@ -245,16 +287,19 @@ class _PracticeGameState extends State<PracticeGame>
   }
 
   _quizOptions(Card_id) {
-    print('CardID==>$Card_id');
+    setState(() {
+      isCPUSpelling = true;
+    });
     ApiService.quiz_options(Card_id).then((value) {
       cardOptions = value['data'];
-      print('OptionLength==> ${cardOptions.length}');
+    });
+    setState(() {
+      _selectingOptions(cardOptions.length);
     });
   }
 
   _winnerConclude() async {
     ApiService.practiceGameWinnerConculde(widget.groupId).then((value) {
-      print('GAMEWINNERCONCLUDE==> $value');
       if (value['status']) {
         _winner();
       }
@@ -263,11 +308,9 @@ class _PracticeGameState extends State<PracticeGame>
 
   _totalCardDistribution() {
     ApiService.practice_total_card_distribution(widget.groupId).then((value) {
-      // print('TOTALCARDS==>$value');
       setState(() {
         totalCard = value['data'];
         if (value['status']) {
-          // print('totalCard==>${totalCard.length}');
           _firstDeckcard();
         }
       });
@@ -291,6 +334,9 @@ class _PracticeGameState extends State<PracticeGame>
             "background": value["data"]['randomCards'][i]["background"],
             "card_name": value["data"]['randomCards'][i]["card_name"],
             "card_type": value["data"]['randomCards'][i]["card_type"],
+            "card_color": value["data"]['randomCards'][i]["card_color"],
+            "postion": 70,
+            "_leftPosition": (mycard.length * 20)
           });
         });
       }
@@ -306,6 +352,7 @@ class _PracticeGameState extends State<PracticeGame>
             "background": value["data"]['randomCPUCards'][i]["background"],
             "card_name": value["data"]['randomCPUCards'][i]["card_name"],
             "card_type": value["data"]['randomCPUCards'][i]["card_type"],
+            "card_color": value["data"]['randomCPUCards'][i]["card_color"],
           });
         });
       }
@@ -322,13 +369,13 @@ class _PracticeGameState extends State<PracticeGame>
             "card_name": value["data"]['remainingCards'][i]["card_name"],
             "card_type": value["data"]['remainingCards'][i]["card_type"],
           });
-          remainingcards.shuffle();
         });
       }
       setState(() {
         isLoading = false;
         isTimeStart = true;
         REMAININGCARDS = remainingcards.length - 1;
+        remainingcards.shuffle();
       });
     });
   }
@@ -338,7 +385,6 @@ class _PracticeGameState extends State<PracticeGame>
     ApiService.practice_first_get_deck_card(
             prefs.get('user_id'), widget.groupId)
         .then((value) {
-      print('FIRSTDECKCARD==> ${deckCards.length}');
       for (var i = 0; i < value["data"].length; i++) {
         setState(() {
           deckCards.add({
@@ -352,7 +398,6 @@ class _PracticeGameState extends State<PracticeGame>
             "card_name": value["data"][i]["card_name"],
             "card_color": value["data"][i]["card_color"]
           });
-          print(deckCards.last['card_color']);
         });
       }
       setState(() {
@@ -382,19 +427,16 @@ class _PracticeGameState extends State<PracticeGame>
         ),
       ),
     );
-    print(result['message']);
     if (result['message'] == 'Wrong Spelling') {
       _takeCardFromDeck();
-      _CpuTurn();
-
       setState(() {
         turn = false;
+        _CpuTurn();
         turn = true;
+        _turnChangeTimer();
       });
     }
     if (result) {
-      print('After_RESULT==>$result');
-
       _runCPUFirst();
       if (isCPU == true) {
         setState(() {
@@ -404,7 +446,6 @@ class _PracticeGameState extends State<PracticeGame>
         setState(() {
           isCPU = true;
         });
-        // print('After_RESULT==>$result');
       }
     }
     // if (result) {
@@ -416,7 +457,6 @@ class _PracticeGameState extends State<PracticeGame>
     //     setState(() {
     //       isCPUSpelling = true;
     //     });
-    //     print('After_isCPUSpelling==>$isCPUSpelling');
     //   }
     // }
   }
@@ -435,7 +475,6 @@ class _PracticeGameState extends State<PracticeGame>
     );
 
     if (result) {
-      print("i am back ");
       setState(() {
         isCPU = false;
         // _runCPUFirst();
@@ -449,16 +488,6 @@ class _PracticeGameState extends State<PracticeGame>
   }
 
   _runHerraf() {
-    print('i\'m here==> $isCPU');
-    if (mounted && isCPU) {
-      Future.delayed(const Duration(seconds: 3), () {
-        deckCards[deckCards.length - 1]["card_type"] == "O"
-            ? _spellOut()
-            // : _spellOut2();
-            : _cPUpenalty(deckCards[deckCards.length - 1]["card_name"]);
-      });
-    }
-
     showGeneralDialog(
         context: context,
         barrierDismissible: true,
@@ -687,7 +716,6 @@ class _PracticeGameState extends State<PracticeGame>
                               onTap: () {
                                 // _penalty(deckCards[0]["id"]);
                                 // Navigator.of(context).pop();
-                                print('Sorry');
                               },
                               child: Transform.rotate(
                                 angle: 13.10,
@@ -763,20 +791,16 @@ class _PracticeGameState extends State<PracticeGame>
   }
 
   _cpuRunHerraf() {
-    if (mounted && isCPU) {
-      Future.delayed(const Duration(seconds: 2), () {
-        deckCards[deckCards.length - 1]["card_type"] == "O"
-            // ? _selectingOptions()c
-            ? _spellOut()
-            : _cPUpenalty(deckCards[deckCards.length - 1]["card_name"]);
-      });
-    }
+    Future.delayed(const Duration(seconds: 2), () {
+      deckCards[deckCards.length - 1]["card_type"] == "P"
+          ? _cPUpenalty(deckCards[deckCards.length - 1]["card_name"])
+          : _quizOptions(deckCards[deckCards.length - 1]["card_id"]);
+    });
   }
 
   _leaveGame() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     ApiService.leaveGame(prefs.get('user_id'), widget.groupId).then((value) {
-      print(value);
     });
 
     Navigator.push(
@@ -892,10 +916,21 @@ class _PracticeGameState extends State<PracticeGame>
 
   _fluttertoast() {
     Fluttertoast.showToast(
-        msg: "Please wait opponent is spelling now",
+        msg: "Please wait for your turn",
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.CENTER,
-        timeInSecForIosWeb: 1,
+        timeInSecForIosWeb: 2,
+        backgroundColor: Colors.black,
+        textColor: Colors.white,
+        fontSize: 16.0);
+  }
+
+  _cardMatchtoast() {
+    Fluttertoast.showToast(
+        msg: "Please play with valid card or choose another options",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 3,
         backgroundColor: Colors.black,
         textColor: Colors.white,
         fontSize: 16.0);
@@ -919,7 +954,6 @@ class _PracticeGameState extends State<PracticeGame>
       'group_id': widget.groupId.toString(),
       'user_id': user_id.toString()
     };
-    //print(messageMap);
     await ApiService.sendChat(messageMap);
 
     Navigator.pop(context);
@@ -928,57 +962,57 @@ class _PracticeGameState extends State<PracticeGame>
   _tapAndHold(index) {
     showGeneralDialog(
         context: context,
-        barrierDismissible: false,
+        barrierDismissible: true,
         barrierLabel:
             MaterialLocalizations.of(context).modalBarrierDismissLabel,
         barrierColor: Colors.black45,
         transitionDuration: const Duration(milliseconds: 200),
         pageBuilder: (BuildContext buildContext, Animation animation,
             Animation secondaryAnimation) {
-          return Scaffold(
-            backgroundColor: Color.fromARGB(0, 28, 28, 28),
-            body: Center(
-                child: mycard[index]["card_type"] == "P"
-                    ? Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Container(
-                            height: MediaQuery.of(context).size.height * 0.5,
-                            width: MediaQuery.of(context).size.width * 0.750,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8.0),
-                              child: Image.network(
-                                '${URLS.IMAGE_URL}/${mycard[index]['background']}',
+          return Center(
+              child: mycard[index]["card_type"] == "P"
+                  ? Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                          height: MediaQuery.of(context).size.height * 0.5,
+                          width: MediaQuery.of(context).size.width * 0.750,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8.0),
+                            child: Image.network(
+                              '${URLS.IMAGE_URL}/${mycard[index]['background']}',
+                              fit: BoxFit.fill,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.25,
+                            width: MediaQuery.of(context).size.width * 0.40,
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
                                 fit: BoxFit.fill,
+                                image: NetworkImage(
+                                    '${URLS.IMAGE_URL}/${mycard[index]['card_image']}'),
                               ),
                             ),
                           ),
-                          Positioned(
-                            child: Container(
-                              height: MediaQuery.of(context).size.height * 0.25,
-                              width: MediaQuery.of(context).size.width * 0.40,
-                              decoration: BoxDecoration(
-                                image: DecorationImage(
-                                  fit: BoxFit.fill,
-                                  image: NetworkImage(
-                                      '${URLS.IMAGE_URL}/${mycard[index]['card_image']}'),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                              bottom: 10,
-                              right: 130,
-                              child: Text(
-                                '${mycard[index]['card_name']}',
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 30,
-                                    fontWeight: FontWeight.bold),
-                              )),
-                        ],
-                      )
-                    : Stack(
+                        ),
+                        Positioned(
+                            bottom: 10,
+                            right: 130,
+                            child: Text(
+                              '${mycard[index]['card_name']}',
+                              style: TextStyle(
+                                  decoration: TextDecoration.none,
+                                  color: Colors.black,
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.bold),
+                            )),
+                      ],
+                    )
+                  : Container(
+                      child: Stack(
                         alignment: Alignment.center,
                         children: [
                           Container(
@@ -998,6 +1032,7 @@ class _PracticeGameState extends State<PracticeGame>
                               child: Text(
                                 '${mycard[index]['card_number']}',
                                 style: TextStyle(
+                                    decoration: TextDecoration.none,
                                     color: Colors.black,
                                     fontSize: 30,
                                     fontWeight: FontWeight.bold),
@@ -1012,6 +1047,7 @@ class _PracticeGameState extends State<PracticeGame>
                                 child: AutoSizeText(
                                   "${mycard[index]['question']}",
                                   style: TextStyle(
+                                    decoration: TextDecoration.none,
                                     color: Colors.black,
                                     // fontSize: 20
                                   ),
@@ -1042,24 +1078,28 @@ class _PracticeGameState extends State<PracticeGame>
                                 child: AutoSizeText(
                                   "${mycard[index]['acronyms']}",
                                   style: TextStyle(
-                                      color: Colors.black, fontSize: 20),
+                                      decoration: TextDecoration.none,
+                                      color: Colors.black,
+                                      fontSize: 20),
                                 ),
                               ),
                             ),
                           ),
                         ],
-                      )),
-          );
+                      ),
+                    ));
         });
   }
 
-  late Timer mytimer;
-
   @override
   Widget build(BuildContext context) {
+    String strDigits(int n) => n.toString().padLeft(2, '0');
+
     var Cards = mycard.length;
     var Cards1 = cpucard.length;
     var remaingCardNumber = remainingcards.length - 1;
+    final minutes = strDigits(myDuration.inMinutes.remainder(60));
+    final seconds = strDigits(myDuration.inSeconds.remainder(60));
 
     return Scaffold(
       backgroundColor: Color(0xffDADADA),
@@ -1164,411 +1204,451 @@ class _PracticeGameState extends State<PracticeGame>
           child: SafeArea(
               child: Column(
             children: <Widget>[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      TextButton(
-                          onPressed: () {
-                            // Navigator.of(context).pop();
-                            showDialog(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                      title: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          SizedBox(
-                                            // height: 90,
-                                            child: Text(
-                                              'Leave the game?',
-                                              style: GoogleFonts.poppins(
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: 20,
-                                                  color: Colors.black),
+              Container(
+                color: Colors.amber,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        TextButton(
+                            onPressed: () {
+                              // Navigator.of(context).pop();
+                              showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                        title: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            SizedBox(
+                                              // height: 90,
+                                              child: Text(
+                                                'Leave the game?',
+                                                style: GoogleFonts.poppins(
+                                                    fontWeight: FontWeight.w500,
+                                                    fontSize: 20,
+                                                    color: Colors.black),
+                                              ),
                                             ),
-                                          ),
-                                          Container(
-                                            // height: 110,
-                                            child: Align(
-                                              alignment: Alignment.topRight,
-                                              child: IconButton(
-                                                icon: Icon(
-                                                  Icons.close,
-                                                  size: 25,
-                                                  color: Color(0xff212121),
+                                            Container(
+                                              // height: 110,
+                                              child: Align(
+                                                alignment: Alignment.topRight,
+                                                child: IconButton(
+                                                  icon: Icon(
+                                                    Icons.close,
+                                                    size: 25,
+                                                    color: Color(0xff212121),
+                                                  ),
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                  },
                                                 ),
-                                                onPressed: () {
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                        content: Text(
+                                          'This will count as a loss and you will lose a life.',
+                                          style: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 14,
+                                              color: Colors.grey),
+                                        ),
+                                        actions: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceAround,
+                                            children: [
+                                              InkWell(
+                                                onTap: () {
                                                   Navigator.pop(context);
                                                 },
+                                                child: Container(
+                                                  alignment: Alignment.center,
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height *
+                                                      0.065,
+                                                  width: MediaQuery.of(context)
+                                                          .size
+                                                          .width *
+                                                      0.300,
+                                                  decoration: BoxDecoration(
+                                                      border: Border.all(
+                                                        color: Colors.grey,
+                                                        width: 1,
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.all(
+                                                              (Radius.circular(
+                                                                  10)))),
+                                                  child: Text("Cancel",
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                              color: Color
+                                                                  .fromARGB(
+                                                                      255,
+                                                                      132,
+                                                                      131,
+                                                                      131),
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500)),
+                                                ),
                                               ),
-                                            ),
+                                              InkWell(
+                                                onTap: () {
+                                                  _leaveGame();
+                                                },
+                                                child: Container(
+                                                  alignment: Alignment.center,
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height *
+                                                      0.065,
+                                                  width: MediaQuery.of(context)
+                                                          .size
+                                                          .width *
+                                                      0.300,
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                          color:
+                                                              Color(0xffCE8C8C),
+                                                          borderRadius:
+                                                              BorderRadius.all(
+                                                                  (Radius
+                                                                      .circular(
+                                                                          10)))),
+                                                  child: Text("Quit Game",
+                                                      style: GoogleFonts.poppins(
+                                                          color: const Color(
+                                                              0xffFFFFFF),
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w500)),
+                                                ),
+                                              ),
+                                            ],
                                           )
                                         ],
-                                      ),
-                                      content: Text(
-                                        'This will count as a loss and you will lose a life.',
-                                        style: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 14,
-                                            color: Colors.grey),
-                                      ),
-                                      actions: [
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceAround,
-                                          children: [
-                                            InkWell(
-                                              onTap: () {
-                                                Navigator.pop(context);
-                                              },
-                                              child: Container(
-                                                alignment: Alignment.center,
-                                                height: MediaQuery.of(context)
-                                                        .size
-                                                        .height *
-                                                    0.065,
-                                                width: MediaQuery.of(context)
-                                                        .size
-                                                        .width *
-                                                    0.300,
-                                                decoration: BoxDecoration(
-                                                    border: Border.all(
-                                                      color: Colors.grey,
-                                                      width: 1,
-                                                    ),
-                                                    borderRadius:
-                                                        BorderRadius.all(
-                                                            (Radius.circular(
-                                                                10)))),
-                                                child: Text("Cancel",
-                                                    style: GoogleFonts.poppins(
-                                                        color: Color.fromARGB(
-                                                            255, 132, 131, 131),
-                                                        fontSize: 14,
-                                                        fontWeight:
-                                                            FontWeight.w500)),
+                                      ));
+                            },
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.only(right: 15),
+                                  child: Icon(Icons.arrow_back,
+                                      color: const Color(0xff212121)),
+                                ),
+                                Text(
+                                  "Leave",
+                                  style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 16,
+                                      color: const Color(0xff212121)),
+                                ),
+                              ],
+                            )),
+                      ],
+                    ),
+                    isTimeStart
+                        ? InkWell(
+                            onTap: () {
+                              setState(() {
+                                isobserving = true;
+                              });
+                            },
+                            child: Center(
+                              child: Container(
+                                  height: 45,
+                                  width: 100,
+                                  child: isCPUSpelling
+                                      ? Image.asset(
+                                          'assets/images/spelling.png')
+                                      : turn
+                                          ? Center(
+                                              child: Text(
+                                                'CPU Turn',
+                                                style: GoogleFonts.poppins(
+                                                    fontWeight: FontWeight.w500,
+                                                    fontSize: 14,
+                                                    color: const Color(
+                                                        0xff212121)),
                                               ),
-                                            ),
-                                            InkWell(
-                                              onTap: () {
-                                                _leaveGame();
-                                              },
-                                              child: Container(
-                                                alignment: Alignment.center,
-                                                height: MediaQuery.of(context)
-                                                        .size
-                                                        .height *
-                                                    0.065,
-                                                width: MediaQuery.of(context)
-                                                        .size
-                                                        .width *
-                                                    0.300,
-                                                decoration: const BoxDecoration(
-                                                    color: Color(0xffCE8C8C),
-                                                    borderRadius:
-                                                        BorderRadius.all(
-                                                            (Radius.circular(
-                                                                10)))),
-                                                child: Text("Quit Game",
-                                                    style: GoogleFonts.poppins(
-                                                        color: const Color(
-                                                            0xffFFFFFF),
-                                                        fontSize: 14,
-                                                        fontWeight:
-                                                            FontWeight.w500)),
-                                              ),
-                                            ),
-                                          ],
-                                        )
-                                      ],
-                                    ));
-                          },
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.only(right: 15),
-                                child: Icon(Icons.arrow_back,
-                                    color: const Color(0xff212121)),
-                              ),
-                              Text(
-                                "Leave",
-                                style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 16,
-                                    color: const Color(0xff212121)),
-                              ),
-                            ],
-                          )),
-                    ],
-                  ),
-                  isTimeStart
-                      ? InkWell(
-                          onTap: () {
-                            // print('Clicked');
-                            setState(() {
-                              isobserving = true;
-                            });
-                            // Navigator.push
-                            // print('After==>$isobserving');
-                          },
-                          child: Center(
-                            child: Container(
-                                // color: Colors.amber,
-                                height: 45,
-                                width: 100,
-                                // child: Center(
-                                //   child: Text(turn ? 'CPU Turn' : 'Your Turn'),
-                                // ),
-                                child: isCPUSpelling
-                                    ? Image.asset('assets/images/spelling.png')
-                                    : turn
-                                        ? Center(
-                                            child: Text(
-                                              'CPU Turn',
-                                              style: GoogleFonts.poppins(
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: 14,
-                                                  color:
-                                                      const Color(0xff212121)),
-                                            ),
-                                          )
-                                        : Center(
-                                            child: Text(
-                                              'Your Turn',
-                                              style: GoogleFonts.poppins(
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: 14,
-                                                  color:
-                                                      const Color(0xff212121)),
-                                            ),
-                                          )),
-                          ),
-                        )
-                      : Container(),
-                  Row(
-                    children: [
-                      Container(
-                          padding: const EdgeInsets.only(right: 10),
-                          height: 30,
-                          width: 30,
-                          // alignment: Alignment.center,
-                          child: Image.asset("assets/images/sand clock.png")),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 10),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.watch_later_outlined,
-                              size: 25,
-                            ),
-                            isTimeStart
-                                ? TweenAnimationBuilder<Duration>(
-                                    duration: const Duration(minutes: 3),
-                                    tween: Tween(
-                                        begin: const Duration(minutes: 3),
-                                        end: Duration.zero),
-                                    onEnd: () {
-                                      print('Timer ended');
-                                    },
-                                    builder: (BuildContext context,
-                                        Duration value, Widget? child) {
-                                      final minutes = value.inMinutes;
-                                      final seconds = value.inSeconds % 60;
-                                      return Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 5),
-                                          child: Text('$minutes:$seconds',
-                                              textAlign: TextAlign.center,
-                                              style: const TextStyle(
-                                                  color: Color(0xff00253A),
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 18)));
-                                    })
-                                : Container(),
-                          ],
-                        ),
-                      ),
-                    ],
-                  )
-                ],
-              ),
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                Container(
-                  // color: Colors.amber,
-                  height: 90,
-                  width: 80,
-                ),
-                JustTheTooltip(
-                  showDuration: Duration(seconds: 3),
-                  backgroundColor: Colors.black,
-                  controller: cpuTooltipController,
-                  preferredDirection: AxisDirection.down,
-                  child: Material(
-                    color: Colors.grey.shade800,
-                    shape: const CircleBorder(),
-                    animationDuration: Duration(seconds: 1),
-                    elevation: 4.0,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 0, top: 5),
-                      child: Stack(
-                        children: [
-                          // cpu_top
-                          Stack(
-                            alignment: Alignment.bottomRight,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(right: 0),
-                                child: Stack(
-                                  alignment: Alignment.topRight,
-                                  children: [
-                                    showCPUHiddenCard
-                                        ? SlideTransition(
-                                            position: cpuOffset,
-                                            child: Container(
-                                              height: 90,
-                                              width: 60,
-                                              decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                    // image: AssetImage(
-                                                    //     'assets/images/HerrafCard.png'),
-                                                    image: NetworkImage(
-                                                        '${URLS.IMAGE_URL}/$cardColorCPU'),
-                                                    fit: BoxFit.cover),
-                                              ),
-                                              alignment: Alignment.center,
-                                              child: Text(""),
-                                            ),
-                                          )
-                                        : Container(),
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                          right: 10, bottom: 15),
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(top: 10),
-                                        child: SizedBox(
-                                            height: 75,
-                                            width: 70,
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                    image: AssetImage(
-                                                      'assets/images/CPU player.png',
-                                                    ),
-                                                    // image: NetworkImage(
-                                                    //     // widget.partnerdata!["image"]
-                                                    //     ''),
-                                                    fit: BoxFit.cover),
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
+                                            )
+                                          : Center(
+                                              child: Text(
+                                                'Your Turn',
+                                                style: GoogleFonts.poppins(
+                                                    fontWeight: FontWeight.w500,
+                                                    fontSize: 14,
+                                                    color: const Color(
+                                                        0xff212121)),
                                               ),
                                             )),
+                            ),
+                          )
+                        : Container(),
+                    Row(
+                      children: [
+                        Container(
+                            padding: const EdgeInsets.only(right: 10),
+                            height: 30,
+                            width: 30,
+                            child: Image.asset("assets/images/sand clock.png")),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.watch_later_outlined,
+                                size: 25,
+                              ),
+                              isTimeStart
+                                  ? Text("$minutes:$seconds")
+                                  // TweenAnimationBuilder<Duration>(
+                                  //     duration: const Duration(minutes: 2),
+                                  //     tween: Tween(
+                                  //         begin: const Duration(minutes: 2),
+                                  //         end: Duration.zero),
+                                  //     onEnd: () {
+                                  //       if (turn == true) {
+                                  //         setState(() {
+                                  //           turn = false;
+                                  //         });
+                                  //       } else {
+                                  //         setState(() {
+                                  //           turn = true;
+                                  //         });
+                                  //       }
+                                  //       _CpuTurn();
+                                  //     },
+                                  //     builder: (BuildContext context,
+                                  //         Duration value, Widget? child) {
+                                  //       final minutes = value.inMinutes;
+                                  //       final seconds = value.inSeconds % 60;
+                                  //       return Padding(
+                                  //           padding: const EdgeInsets.symmetric(
+                                  //               vertical: 5),
+                                  //           child: Text('$minutes:$seconds',
+                                  //               textAlign: TextAlign.center,
+                                  //               style: const TextStyle(
+                                  //                   color: Color(0xff00253A),
+                                  //                   fontWeight: FontWeight.w600,
+                                  //                   fontSize: 18)));
+                                  //     })
+                                  : Container(),
+                            ],
+                          ),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+              Container(
+                color: Colors.red,
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        // color: Colors.amber,
+                        height: 90,
+                        width: 80,
+                      ),
+                      JustTheTooltip(
+                        showDuration: Duration(seconds: 3),
+                        backgroundColor: Colors.black,
+                        controller: cpuTooltipController,
+                        preferredDirection: AxisDirection.down,
+                        child: Material(
+                          color: Colors.grey.shade800,
+                          shape: const CircleBorder(),
+                          animationDuration: Duration(seconds: 1),
+                          elevation: 4.0,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 0, top: 5),
+                            child: Stack(
+                              children: [
+                                // cpu_top
+                                Stack(
+                                  alignment: Alignment.bottomRight,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 0),
+                                      child: Stack(
+                                        alignment: Alignment.topRight,
+                                        children: [
+                                          showCPUHiddenCard
+                                              ? SlideTransition(
+                                                  position: cpuOffset,
+                                                  child: Container(
+                                                    height: 90,
+                                                    width: 60,
+                                                    decoration: BoxDecoration(
+                                                      image: DecorationImage(
+                                                          // image: AssetImage(
+                                                          //     'assets/images/HerrafCard.png'),
+                                                          image: NetworkImage(
+                                                              '${URLS.IMAGE_URL}/$cardColorCPU'),
+                                                          fit: BoxFit.cover),
+                                                    ),
+                                                    alignment: Alignment.center,
+                                                    child: Text(""),
+                                                  ),
+                                                )
+                                              : Container(),
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                right: 10, bottom: 15),
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                  top: 10),
+                                              child: SizedBox(
+                                                  height: 75,
+                                                  width: 70,
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      image: DecorationImage(
+                                                          image: AssetImage(
+                                                            'assets/images/CPU player.png',
+                                                          ),
+                                                          // image: NetworkImage(
+                                                          //     // widget.partnerdata!["image"]
+                                                          //     ''),
+                                                          fit: BoxFit.cover),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                    ),
+                                                  )),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 30, bottom: 10),
+                                      child: Transform.rotate(
+                                        angle: (-18.3),
+                                        child: Container(
+                                          height: 30,
+                                          width: 19,
+                                          decoration: BoxDecoration(
+                                            image: DecorationImage(
+                                                image: AssetImage(
+                                                    'assets/images/HerrafCard.png'),
+                                                fit: BoxFit.cover),
+                                          ),
+                                          alignment: Alignment.center,
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          right: 4, bottom: 7),
+                                      child: Transform.rotate(
+                                        angle: (-12.4),
+                                        child: Container(
+                                          height: 33,
+                                          width: 22,
+                                          decoration: BoxDecoration(
+                                            image: DecorationImage(
+                                                image: AssetImage(
+                                                    'assets/images/HerrafCard.png'),
+                                                fit: BoxFit.cover),
+                                          ),
+                                          alignment: Alignment.center,
+                                          transformAlignment:
+                                              Alignment.topRight,
+                                          child: Text(
+                                            'X$Cards1',
+                                            style: GoogleFonts.poppins(
+                                                color: Colors.black,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w600),
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.only(left: 30, bottom: 10),
-                                child: Transform.rotate(
-                                  angle: (-18.3),
-                                  child: Container(
-                                    height: 30,
-                                    width: 19,
-                                    decoration: BoxDecoration(
-                                      image: DecorationImage(
-                                          image: AssetImage(
-                                              'assets/images/HerrafCard.png'),
-                                          fit: BoxFit.cover),
-                                    ),
-                                    alignment: Alignment.center,
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.only(right: 4, bottom: 7),
-                                child: Transform.rotate(
-                                  angle: (-12.4),
-                                  child: Container(
-                                    height: 33,
-                                    width: 22,
-                                    decoration: BoxDecoration(
-                                      image: DecorationImage(
-                                          image: AssetImage(
-                                              'assets/images/HerrafCard.png'),
-                                          fit: BoxFit.cover),
-                                    ),
-                                    alignment: Alignment.center,
-                                    transformAlignment: Alignment.topRight,
-                                    child: Text(
-                                      'X$Cards1',
-                                      style: GoogleFonts.poppins(
-                                          color: Colors.black,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600),
+                                Positioned(
+                                  bottom: 20,
+                                  left: 15,
+                                  child: SizedBox(
+                                    height: 35,
+                                    width: 35,
+                                    child: ClipPolygon(
+                                      sides: 6,
+                                      borderRadius: 5.0,
+                                      rotate: 60.0,
+                                      boxShadows: [
+                                        PolygonBoxShadow(
+                                            color: const Color(0xff773030),
+                                            elevation: 1.0),
+                                        PolygonBoxShadow(
+                                          color: const Color(0xff773030),
+                                          elevation: 1,
+                                        )
+                                      ],
+                                      child: Container(
+                                          color: const Color(0xff1F1C1C),
+                                          alignment: Alignment.center,
+                                          child: Text("0",
+                                              style: GoogleFonts.poppins(
+                                                  fontWeight: FontWeight.w600,
+                                                  color:
+                                                      const Color(0xffFFFFFF),
+                                                  fontSize: 12),
+                                              textAlign: TextAlign.center)),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          Positioned(
-                            bottom: 20,
-                            left: 15,
-                            child: SizedBox(
-                              height: 35,
-                              width: 35,
-                              child: ClipPolygon(
-                                sides: 6,
-                                borderRadius: 5.0,
-                                rotate: 60.0,
-                                boxShadows: [
-                                  PolygonBoxShadow(
-                                      color: const Color(0xff773030),
-                                      elevation: 1.0),
-                                  PolygonBoxShadow(
-                                    color: const Color(0xff773030),
-                                    elevation: 1,
-                                  )
-                                ],
-                                child: Container(
-                                    color: const Color(0xff1F1C1C),
-                                    alignment: Alignment.center,
-                                    child: Text("0",
-                                        style: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w600,
-                                            color: const Color(0xffFFFFFF),
-                                            fontSize: 12),
-                                        textAlign: TextAlign.center)),
-                              ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 120),
+                                ),
+                              ],
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 120),
+                        ),
+                        content: Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text(
+                            chatMessage.toString(),
+                            style: TextStyle(color: Colors.white, fontSize: 22),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                  content: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text(
-                      chatMessage.toString(),
-                      style: TextStyle(color: Colors.white, fontSize: 22),
-                    ),
-                  ),
-                ),
-                for (var index = 0; index < remainingcards.length; index++)
-                  ...[],
-                // remainingcard_right
-                Stack(
-                  children: [
-                    showRemainingHiddenCard
-                        ? SlideTransition(
-                            position: offset,
+
+                      // remainingcard_right
+                      Stack(
+                        children: [
+                          showRemainingHiddenCard
+                              ? SlideTransition(
+                                  position: offset,
+                                  child: Container(
+                                    height: 90,
+                                    width: 60,
+                                    decoration: BoxDecoration(
+                                      image: DecorationImage(
+                                          image: AssetImage(
+                                              'assets/images/HerrafCard.png'),
+                                          fit: BoxFit.cover),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(""),
+                                  ),
+                                )
+                              : Container(),
+                          InkWell(
+                            onTap: () {
+                              _takeCardFromDeck();
+                            },
                             child: Container(
                               height: 90,
                               width: 60,
@@ -1579,44 +1659,29 @@ class _PracticeGameState extends State<PracticeGame>
                                     fit: BoxFit.cover),
                               ),
                               alignment: Alignment.center,
-                              child: Text(""),
+                              child: Text(
+                                remainingcards.length == 0
+                                    ? 'X108'
+                                    : "X$remaingCardNumber",
+                                // 'X$REMAININGCARDS',
+                                style: GoogleFonts.poppins(
+                                    color: Colors.black,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600),
+                              ),
                             ),
-                          )
-                        : Container(),
-                    InkWell(
-                      onTap: () {
-                        _takeCardFromDeck();
-                      },
-                      child: Container(
-                        height: 90,
-                        width: 60,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                              image: AssetImage('assets/images/HerrafCard.png'),
-                              fit: BoxFit.cover),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          remainingcards.length == 0
-                              ? 'X108'
-                              : "X$remaingCardNumber",
-                          // 'X$REMAININGCARDS',
-                          style: GoogleFonts.poppins(
-                              color: Colors.black,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600),
-                        ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              ]),
+                    ]),
+              ),
               Container(
+                  color: Colors.blueGrey,
                   padding: const EdgeInsets.only(
                     top: 10,
                   ),
-                  margin: new EdgeInsets.symmetric(horizontal: 20.0),
-                  // width: 150,
+                  // margin: new EdgeInsets.symmetric(horizontal: 20.0),
+
                   height: 280,
                   child: Stack(fit: StackFit.expand, children: <Widget>[
                     Image(
@@ -1632,7 +1697,7 @@ class _PracticeGameState extends State<PracticeGame>
                           )
                         : Positioned(
                             top: 30,
-                            left: 100,
+                            left: 120,
                             child: Stack(
                               children: <Widget>[
                                 for (var index = 0;
@@ -1801,188 +1866,187 @@ class _PracticeGameState extends State<PracticeGame>
                             ),
                           )
                   ])),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  InkWell(
-                    onTap: () {
-                      _chat(humanUserId);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.only(
-                        top: 55,
+              Container(
+                // color: Colors.pinkAccent,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    InkWell(
+                      onTap: () {
+                        _chat(humanUserId);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.only(
+                          top: 55,
+                        ),
+                        height: 120,
+                        child: Image.asset("assets/images/chat.png"),
                       ),
-                      height: 120,
-                      child: Image.asset("assets/images/chat.png"),
                     ),
-                  ),
-                  JustTheTooltip(
-                    showDuration: Duration(seconds: 3),
-                    backgroundColor: Colors.black,
-                    controller: humanTooltipController,
-                    preferredDirection: AxisDirection.up,
-                    child: Material(
-                      color: Colors.grey.shade800,
-                      shape: const CircleBorder(),
-                      elevation: 4.0,
-                      animationDuration: Duration(seconds: 1),
-                      child: Stack(
-                        alignment: Alignment.bottomCenter,
-                        children: [
-                          Stack(
-                            alignment: Alignment.bottomRight,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(right: 0),
-                                child: Stack(
-                                  alignment: Alignment.topRight,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                          right: 10, bottom: 15),
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(top: 10),
-                                        child: SizedBox(
-                                          height: 75,
-                                          width: 70,
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                  image:
-                                                      NetworkImage(user_photo),
-                                                  // NetworkImage(
-                                                  //     '${URLS.IMAGE_URL}/$user_photo'),
-                                                  fit: BoxFit.cover),
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
+                    JustTheTooltip(
+                      showDuration: Duration(seconds: 3),
+                      backgroundColor: Colors.black,
+                      controller: humanTooltipController,
+                      preferredDirection: AxisDirection.up,
+                      child: Material(
+                        color: Colors.grey.shade800,
+                        shape: const CircleBorder(),
+                        elevation: 4.0,
+                        animationDuration: Duration(seconds: 1),
+                        child: Stack(
+                          alignment: Alignment.bottomCenter,
+                          children: [
+                            Stack(
+                              alignment: Alignment.bottomRight,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 0),
+                                  child: Stack(
+                                    alignment: Alignment.topRight,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                            right: 10, bottom: 15),
+                                        child: Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 10),
+                                          child: SizedBox(
+                                            height: 75,
+                                            width: 70,
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                image: DecorationImage(
+                                                    image: NetworkImage(
+                                                        user_photo),
+                                                    // NetworkImage(
+                                                    //     '${URLS.IMAGE_URL}/$user_photo'),
+                                                    fit: BoxFit.cover),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
                                             ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.only(left: 30, bottom: 10),
-                                child: Transform.rotate(
-                                  angle: (-18.3),
-                                  child: Container(
-                                    height: 33,
-                                    width: 22,
-                                    decoration: BoxDecoration(
-                                      image: DecorationImage(
-                                          image: AssetImage(
-                                              'assets/images/HerrafCard.png'),
-                                          fit: BoxFit.cover),
-                                    ),
-                                    alignment: Alignment.center,
-                                    transformAlignment: Alignment.topRight,
+                                    ],
                                   ),
                                 ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.only(right: 4, bottom: 7),
-                                child: Transform.rotate(
-                                  angle: (-12.4),
-                                  child: Container(
-                                    height: 33,
-                                    width: 22,
-                                    decoration: BoxDecoration(
-                                      image: DecorationImage(
-                                          image: AssetImage(
-                                              'assets/images/HerrafCard.png'),
-                                          fit: BoxFit.cover),
-                                    ),
-                                    alignment: Alignment.center,
-                                    transformAlignment: Alignment.topRight,
-                                    child: Text(
-                                      "X$Cards",
-                                      style: GoogleFonts.poppins(
-                                          color: Colors.black,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600),
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 30, bottom: 10),
+                                  child: Transform.rotate(
+                                    angle: (-18.3),
+                                    child: Container(
+                                      height: 33,
+                                      width: 22,
+                                      decoration: BoxDecoration(
+                                        image: DecorationImage(
+                                            image: AssetImage(
+                                                'assets/images/HerrafCard.png'),
+                                            fit: BoxFit.cover),
+                                      ),
+                                      alignment: Alignment.center,
+                                      transformAlignment: Alignment.topRight,
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 17),
-                            child: SizedBox(
-                              height: 35,
-                              width: 35,
-                              child: ClipPolygon(
-                                sides: 6,
-                                borderRadius: 5.0,
-
-                                // Defaults to 0.0 degrees
-                                rotate: 60.0,
-                                // Defaults to 0.0 degrees
-                                boxShadows: [
-                                  PolygonBoxShadow(
-                                      color: const Color(0xff773030),
-                                      elevation: 1.0),
-                                  PolygonBoxShadow(
-                                    color: const Color(0xff773030),
-                                    elevation: 1,
-                                  )
-                                ],
-                                child: Container(
-                                    color: const Color(0xff1F1C1C),
-                                    alignment: Alignment.center,
-                                    child: Text("0",
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      right: 4, bottom: 7),
+                                  child: Transform.rotate(
+                                    angle: (-12.4),
+                                    child: Container(
+                                      height: 33,
+                                      width: 22,
+                                      decoration: BoxDecoration(
+                                        image: DecorationImage(
+                                            image: AssetImage(
+                                                'assets/images/HerrafCard.png'),
+                                            fit: BoxFit.cover),
+                                      ),
+                                      alignment: Alignment.center,
+                                      transformAlignment: Alignment.topRight,
+                                      child: Text(
+                                        "X$Cards",
                                         style: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w600,
-                                            color: const Color(0xffFFFFFF),
-                                            fontSize: 12),
-                                        textAlign: TextAlign.center)),
+                                            color: Colors.black,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(right: 17),
+                              child: SizedBox(
+                                height: 35,
+                                width: 35,
+                                child: ClipPolygon(
+                                  sides: 6,
+                                  borderRadius: 5.0,
+
+                                  // Defaults to 0.0 degrees
+                                  rotate: 60.0,
+                                  // Defaults to 0.0 degrees
+                                  boxShadows: [
+                                    PolygonBoxShadow(
+                                        color: const Color(0xff773030),
+                                        elevation: 1.0),
+                                    PolygonBoxShadow(
+                                      color: const Color(0xff773030),
+                                      elevation: 1,
+                                    )
+                                  ],
+                                  child: Container(
+                                      color: const Color(0xff1F1C1C),
+                                      alignment: Alignment.center,
+                                      child: Text("0",
+                                          style: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w600,
+                                              color: const Color(0xffFFFFFF),
+                                              fontSize: 12),
+                                          textAlign: TextAlign.center)),
+                                ),
                               ),
                             ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              top: 0,
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                top: 0,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                      ),
+                      content: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text(
+                          chatMessage.toString(),
+                          style: TextStyle(color: Colors.white, fontSize: 22),
+                        ),
                       ),
                     ),
-                    content: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Text(
-                        chatMessage.toString(),
-                        style: TextStyle(color: Colors.white, fontSize: 22),
+                    InkWell(
+                      onTap: () {
+                        turn == false ? _runHerraf() : _fluttertoast();
+                      },
+                      child: Container(
+                        // color:Colors.amber,
+                        padding: const EdgeInsets.only(
+                          top: 25,
+                        ),
+                        height: 100,
+                        width: 100,
+                        child: Image.asset("assets/images/herraf button.png"),
                       ),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      print('TURN==>$turn');
-                      _runHerraf();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.only(
-                        top: 55,
-                      ),
-                      height: 130,
-                      child: Image.asset("assets/images/herraf button.png"),
-                    ),
-                  )
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 25),
-              ),
-              //mycard_bottom
-              Container(
-                margin: EdgeInsets.only(
-                  left: 15,
+                    )
+                  ],
                 ),
-                height: MediaQuery.of(context).size.height * 0.205,
+              ),
+              Container(
+                color: Colors.green,
+                height: MediaQuery.of(context).size.height * 0.250,
                 width: MediaQuery.of(context).size.width,
                 child: isLoading
                     ? Center(
@@ -1999,8 +2063,6 @@ class _PracticeGameState extends State<PracticeGame>
                                       width: 100,
                                       decoration: BoxDecoration(
                                         image: DecorationImage(
-                                            // image: AssetImage(
-                                            //     'assets/images/HerrafCard.png'),
                                             image: NetworkImage(
                                                 '${URLS.IMAGE_URL}/$cardColor'),
                                             fit: BoxFit.cover),
@@ -2011,196 +2073,550 @@ class _PracticeGameState extends State<PracticeGame>
                                   : Container(),
                             ),
                           ),
-                          for (var index = 0;
-                              index < mycard.length;
-                              index++) ...[
-                            new Positioned(
-                              left: index == 0
-                                  ? 7
-                                  : index == 1
-                                      ? 20
-                                      : double.parse((15.0 * index).toString()),
-                              child: Transform.rotate(
-                                angle: (double.parse("0.${index + 1}")),
-                                child: GestureDetector(
-                                    onTap: () async {
-                                      // print("callingme");
-                                      if (isCPUSpelling) {
-                                        _fluttertoast();
-                                      } else {
-                                        _cardColor(mycard[index]['background']);
-                                        _pushMyCard(index);
-                                      }
-                                      setState(() {
-                                        showMyHiddenCard = true;
-                                      });
-                                      await myCardController.forward();
-                                    },
-                                    onLongPress: () {
-                                      setState(() {
-                                        _tapAndHold(index);
-                                        // print('tap and hold');
-                                      });
-                                    },
-                                    onDoubleTap: () {
-                                      print('double tapped');
-                                    },
-                                    child: mycard[index]["card_type"]
-                                                .toString() ==
-                                            "P"
-                                        ? Stack(
-                                            clipBehavior: Clip.none,
-                                            alignment: Alignment.bottomCenter,
-                                            children: [
-                                              Container(
-                                                  color: Colors.white,
-                                                  height: MediaQuery.of(context)
-                                                          .size
-                                                          .height *
-                                                      0.201,
-                                                  width: MediaQuery.of(context)
-                                                          .size
-                                                          .width *
-                                                      0.300,
-                                                  child: Image.network(
-                                                    '${URLS.IMAGE_URL}/${mycard[index]['background']}',
-                                                    fit: BoxFit.fill,
-                                                  )),
-                                              Positioned(
-                                                top: 45,
-                                                child: Container(
-                                                  height: MediaQuery.of(context)
-                                                          .size
-                                                          .height *
-                                                      0.10,
-                                                  width: 50,
-                                                  child: CachedNetworkImage(
-                                                    progressIndicatorBuilder:
-                                                        (context, url,
-                                                                progress) =>
-                                                            Center(
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                        value:
-                                                            progress.progress,
-                                                      ),
-                                                    ),
-                                                    imageUrl:
-                                                        '${URLS.IMAGE_URL}/${mycard[index]['card_image']}',
-                                                  ),
-                                                ),
-                                              ),
-                                              Positioned(
-                                                child: Container(
-                                                  margin: EdgeInsets.only(
-                                                      left: 10, top: 30),
-                                                  padding:
-                                                      EdgeInsets.only(top: 20),
-                                                  width: 50,
-                                                  height: 40,
-                                                  child: FittedBox(
-                                                    child: AutoSizeText(
-                                                      "${mycard[index]['card_name']}",
-                                                      style: TextStyle(
-                                                        color: Colors.black,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          )
-                                        : Stack(
-                                            clipBehavior: Clip.none,
-                                            alignment: Alignment.bottomCenter,
-                                            children: [
-                                              Container(
-                                                  color: Colors.white,
-                                                  height: MediaQuery.of(context)
-                                                          .size
-                                                          .height *
-                                                      0.201,
-                                                  width: MediaQuery.of(context)
-                                                          .size
-                                                          .width *
-                                                      0.300,
-                                                  child: Image.network(
-                                                    '${URLS.IMAGE_URL}/${mycard[index]['background']}',
-                                                    fit: BoxFit.fill,
-                                                  )),
-                                              Positioned(
-                                                  top: 5,
-                                                  right: 100,
-                                                  child: Text(
-                                                    '${mycard[index]['card_number']}',
-                                                    style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 15,
-                                                        color: Colors.black),
-                                                  )),
-                                              Positioned(
-                                                top: 0,
-                                                left: 20,
-                                                child: Container(
-                                                  margin: EdgeInsets.only(
-                                                      right: 10),
-                                                  padding:
-                                                      EdgeInsets.only(right: 5),
-                                                  width: 100,
-                                                  height: 20,
-                                                  child: FittedBox(
-                                                    child: AutoSizeText(
-                                                      "${mycard[index]['question']}",
-                                                      style: TextStyle(
-                                                          color: Colors.black),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              Positioned(
-                                                top: 45,
-                                                child: Container(
-                                                  height: MediaQuery.of(context)
-                                                          .size
-                                                          .height *
-                                                      0.10,
-                                                  width: 50,
-                                                  decoration: BoxDecoration(
-                                                    image: DecorationImage(
-                                                      fit: BoxFit.fill,
-                                                      image: NetworkImage(
-                                                          "${URLS.IMAGE_URL}/${mycard[index]['card_image']}"),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              Positioned(
-                                                child: Container(
-                                                  margin: EdgeInsets.only(
-                                                      left: 10, top: 30),
-                                                  padding:
-                                                      EdgeInsets.only(top: 20),
-                                                  width: 50,
-                                                  height: 40,
-                                                  child: FittedBox(
-                                                    child: AutoSizeText(
-                                                      "${mycard[index]['acronyms']}",
-                                                      style: TextStyle(
-                                                        color: Colors.black,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          )),
+                          Center(
+                            child: Container(
+                              color: Colors.red,
+                              //margin: EdgeInsets.only(left: 50),
+                              height: 200,
+                              width: MediaQuery.of(context).size.width,
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  for (var index = 0;
+                                      index < mycard.length;
+                                      index++) ...[
+                                    Positioned(
+                                      top: double.parse(
+                                          mycard[index]["postion"].toString()),
+                                      left: double.parse(
+                                          mycard[index]["_leftPosition"].toString()),
+                                      child: Transform.rotate(
+                                          angle: mycard[index]["postion"] != 70
+                                              ? 0
+                                              : double.parse(
+                                                  (angle + (index * 0.2))
+                                                      .toStringAsFixed(1)),
+                                          child: GestureDetector(
+                                            onPanUpdate:  (DragUpdateDetails details) {
+                                                setState(() {
+                                                  mycard[index]["postion"] += details.delta.dy;
+
+                                                      mycard[index]["_leftPosition"] += details.delta.dx;
+                                                });
+                                            },
+                                              // onVerticalDragUpdate:
+                                              //     (DragUpdateDetails details) {
+                                              //   setState(() {
+                                              //     mycard[index]["postion"] +=
+                                              //         details.delta.dy;
+                                              //   });
+                                              // },
+                                              // onHorizontalDragUpdate:
+                                              //     (DragUpdateDetails details) {
+                                              //   setState(() {
+                                              //     mycard[index]["_leftPosition"] +=
+                                              //         details.delta.dx;
+                                              //   });
+                                              // },
+                                              onPanEnd:
+                                                  (DragEndDetails details) {
+                                                setState(() async {
+                                                  if (mycard[index]["postion"] <
+                                                      -150) {
+                                                  
+                                                    if (turn) {
+                                                      _fluttertoast();
+                                                    } else {
+                                                      _cardColor(mycard[index]
+                                                          ['background']);
+                                                      if (mycard[index]
+                                                              ['card_type'] ==
+                                                          'P') {
+                                                        _pushMyCard(index);
+                                                        setState(() {
+                                                          showMyHiddenCard =
+                                                              true;
+                                                        });
+                                                        await myCardController
+                                                            .forward();
+                                                      } else if (deckCards.last[
+                                                              'card_color'] ==
+                                                          mycard[index]
+                                                              ['card_color']) {
+                                                        _pushMyCard(index);
+                                                        setState(() {
+                                                          showMyHiddenCard =
+                                                              true;
+                                                        });
+                                                        await myCardController
+                                                            .forward();
+                                                      } else if (deckCards.last[
+                                                              'card_number'] ==
+                                                          mycard[index]
+                                                              ['card_number']) {
+                                                        _pushMyCard(index);
+                                                        setState(() {
+                                                          showMyHiddenCard =
+                                                              true;
+                                                        });
+                                                        await myCardController
+                                                            .forward();
+                                                      } else {
+                                                        _cardMatchtoast();
+                                                      }
+                                                    }
+                                                  }
+                                                  mycard[index]["postion"] = 70;
+                                                });
+                                              },
+                                              onTap: () async {
+                                                if (turn) {
+                                                  _fluttertoast();
+                                                } else {
+                                                  _cardColor(mycard[index]
+                                                      ['background']);
+                                                  if (mycard[index]
+                                                          ['card_type'] ==
+                                                      'P') {
+                                                    _pushMyCard(index);
+                                                    setState(() {
+                                                      showMyHiddenCard = true;
+                                                    });
+                                                    await myCardController
+                                                        .forward();
+                                                  } else if (deckCards
+                                                          .last['card_color'] ==
+                                                      mycard[index]
+                                                          ['card_color']) {
+                                                    _pushMyCard(index);
+                                                    setState(() {
+                                                      showMyHiddenCard = true;
+                                                    });
+                                                    await myCardController
+                                                        .forward();
+                                                  } else if (deckCards.last[
+                                                          'card_number'] ==
+                                                      mycard[index]
+                                                          ['card_number']) {
+                                                    _pushMyCard(index);
+                                                    setState(() {
+                                                      showMyHiddenCard = true;
+                                                    });
+                                                    await myCardController
+                                                        .forward();
+                                                  } else {
+                                                    _cardMatchtoast();
+                                                  }
+                                                }
+                                              },
+                                              onLongPress: () {
+                                                setState(() {
+                                                  _tapAndHold(index);
+                                                });
+                                              },
+                                              onDoubleTap: () {
+                                              },
+                                              child: mycard[index]["card_type"]
+                                                          .toString() ==
+                                                      "P"
+                                                  ? Stack(
+                                                      clipBehavior: Clip.none,
+                                                      alignment: Alignment
+                                                          .bottomCenter,
+                                                      children: [
+                                                        Container(
+                                                            color:
+                                                                Colors.yellow,
+                                                            height: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .height *
+                                                                0.130,
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.230,
+                                                            child:
+                                                                Image.network(
+                                                              '${URLS.IMAGE_URL}/${mycard[index]['background']}',
+                                                              fit: BoxFit.fill,
+                                                            )),
+                                                        Positioned(
+                                                          top: 45,
+                                                          child: Container(
+                                                            height: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .height *
+                                                                0.05,
+                                                            width: 50,
+                                                            child:
+                                                                CachedNetworkImage(
+                                                              progressIndicatorBuilder:
+                                                                  (context, url,
+                                                                          progress) =>
+                                                                      Center(
+                                                                child:
+                                                                    CircularProgressIndicator(
+                                                                  value: progress
+                                                                      .progress,
+                                                                ),
+                                                              ),
+                                                              imageUrl:
+                                                                  '${URLS.IMAGE_URL}/${mycard[index]['card_image']}',
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        Positioned(
+                                                          child: Container(
+                                                            margin:
+                                                                EdgeInsets.only(
+                                                                    left: 10,
+                                                                    top: 30),
+                                                            padding:
+                                                                EdgeInsets.only(
+                                                                    top: 20),
+                                                            width: 50,
+                                                            height: 40,
+                                                            child: FittedBox(
+                                                              child:
+                                                                  AutoSizeText(
+                                                                "${mycard[index]['card_name']}",
+                                                                style:
+                                                                    TextStyle(
+                                                                  color: Colors
+                                                                      .black,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    )
+                                                  : Stack(
+                                                      clipBehavior: Clip.none,
+                                                      alignment: Alignment
+                                                          .bottomCenter,
+                                                      children: [
+                                                        Container(
+                                                            color:
+                                                                Colors.yellow,
+                                                            height: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .height *
+                                                                0.130,
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.230,
+                                                            child:
+                                                                Image.network(
+                                                              '${URLS.IMAGE_URL}/${mycard[index]['background']}',
+                                                              fit: BoxFit.fill,
+                                                            )),
+                                                        Positioned(
+                                                            top: 0,
+                                                            right: 75,
+                                                            child: Text(
+                                                              '${mycard[index]['card_number']}',
+                                                              style: TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  fontSize: 15,
+                                                                  color: Colors
+                                                                      .black),
+                                                            )),
+                                                        Positioned(
+                                                          top: 0,
+                                                          left: 20,
+                                                          child: Container(
+                                                            margin:
+                                                                EdgeInsets.only(
+                                                                    right: 10),
+                                                            padding:
+                                                                EdgeInsets.only(
+                                                                    right: 5),
+                                                            width: 75,
+                                                            height: 20,
+                                                            child: FittedBox(
+                                                              child:
+                                                                  AutoSizeText(
+                                                                "${mycard[index]['question']}",
+                                                                style: TextStyle(
+                                                                    color: Colors
+                                                                        .black),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        Positioned(
+                                                          top: 30,
+                                                          child: Container(
+                                                            height: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .height *
+                                                                0.05,
+                                                            width: 50,
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              image:
+                                                                  DecorationImage(
+                                                                fit:
+                                                                    BoxFit.fill,
+                                                                image: NetworkImage(
+                                                                    "${URLS.IMAGE_URL}/${mycard[index]['card_image']}"),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        Positioned(
+                                                          child: Container(
+                                                            margin:
+                                                                EdgeInsets.only(
+                                                                    left: 10,
+                                                                    top: 30),
+                                                            padding:
+                                                                EdgeInsets.only(
+                                                                    top: 20),
+                                                            width: 50,
+                                                            height: 40,
+                                                            child: FittedBox(
+                                                              child:
+                                                                  AutoSizeText(
+                                                                "${mycard[index]['acronyms']}",
+                                                                style:
+                                                                    TextStyle(
+                                                                  color: Colors
+                                                                      .black,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ))),
+                                    )
+                                  ]
+                                ],
                               ),
                             ),
-                          ],
+                          ),
+
+                          /*ListView.builder(
+          itemCount: mycard.length, // Number of cards to display
+          scrollDirection: Axis.horizontal,
+          itemBuilder: (BuildContext context, int index) {
+            double currentAngle = angle + (index * 0.2); 
+
+
+              return new Positioned(
+                  //left: index * 10,
+                  child: Transform.rotate(
+                    angle: currentAngle,
+                    child: GestureDetector(
+                        onTap: () async {
+                          if (turn) {
+                            _fluttertoast();
+                          } else {
+                            _cardColor(mycard[index]['background']);
+                            if (mycard[index]['card_type'] == 'P') {
+                              _pushMyCard(index);
+                              setState(() {
+                                showMyHiddenCard = true;
+                              });
+                              await myCardController.forward();
+                            } else if (deckCards
+                                    .last['card_color'] ==
+                                mycard[index]['card_color']) {
+                              _pushMyCard(index);
+                              setState(() {
+                                showMyHiddenCard = true;
+                              });
+                              await myCardController.forward();
+                            } else if (deckCards
+                                    .last['card_number'] ==
+                                mycard[index]['card_number']) {
+                              _pushMyCard(index);
+                              setState(() {
+                                showMyHiddenCard = true;
+                              });
+                              await myCardController.forward();
+                            } else {
+                              _cardMatchtoast();
+                            }
+                          }
+                        },
+                        onLongPress: () {
+                          setState(() {
+                            _tapAndHold(index);
+                          });
+                        },
+                        onDoubleTap: () {
+                        },
+                        child: mycard[index]["card_type"]
+                                    .toString() ==
+                                "P"
+                            ? Stack(
+                                clipBehavior: Clip.none,
+                                alignment: Alignment.bottomCenter,
+                                children: [
+                                  Container(
+                                      color: Colors.white,
+                                      height: MediaQuery.of(context)
+                                              .size
+                                              .height *
+                                          0.201,
+                                      width: MediaQuery.of(context)
+                                              .size
+                                              .width *
+                                          0.300,
+                                      child: Image.network(
+                                        '${URLS.IMAGE_URL}/${mycard[index]['background']}',
+                                        fit: BoxFit.fill,
+                                      )),
+                                  Positioned(
+                                    top: 45,
+                                    child: Container(
+                                      height: MediaQuery.of(context)
+                                              .size
+                                              .height *
+                                          0.10,
+                                      width: 50,
+                                      child: CachedNetworkImage(
+                                        progressIndicatorBuilder:
+                                            (context, url,
+                                                    progress) =>
+                                                Center(
+                                          child:
+                                              CircularProgressIndicator(
+                                            value:
+                                                progress.progress,
+                                          ),
+                                        ),
+                                        imageUrl:
+                                            '${URLS.IMAGE_URL}/${mycard[index]['card_image']}',
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    child: Container(
+                                      margin: EdgeInsets.only(
+                                          left: 10, top: 30),
+                                      padding:
+                                          EdgeInsets.only(top: 20),
+                                      width: 50,
+                                      height: 40,
+                                      child: FittedBox(
+                                        child: AutoSizeText(
+                                          "${mycard[index]['card_name']}",
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Stack(
+                                clipBehavior: Clip.none,
+                                alignment: Alignment.bottomCenter,
+                                children: [
+                                  Container(
+                                      color: Colors.white,
+                                      height: MediaQuery.of(context)
+                                              .size
+                                              .height *
+                                          0.201,
+                                      width: MediaQuery.of(context)
+                                              .size
+                                              .width *
+                                          0.300,
+                                      child: Image.network(
+                                        '${URLS.IMAGE_URL}/${mycard[index]['background']}',
+                                        fit: BoxFit.fill,
+                                      )),
+                                  Positioned(
+                                      top: 5,
+                                      right: 100,
+                                      child: Text(
+                                        '${mycard[index]['card_number']}',
+                                        style: TextStyle(
+                                            fontWeight:
+                                                FontWeight.bold,
+                                            fontSize: 15,
+                                            color: Colors.black),
+                                      )),
+                                  Positioned(
+                                    top: 0,
+                                    left: 20,
+                                    child: Container(
+                                      margin: EdgeInsets.only(
+                                          right: 10),
+                                      padding:
+                                          EdgeInsets.only(right: 5),
+                                      width: 100,
+                                      height: 20,
+                                      child: FittedBox(
+                                        child: AutoSizeText(
+                                          "${mycard[index]['question']}",
+                                          style: TextStyle(
+                                              color: Colors.black),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 45,
+                                    child: Container(
+                                      height: MediaQuery.of(context)
+                                              .size
+                                              .height *
+                                          0.10,
+                                      width: 50,
+                                      decoration: BoxDecoration(
+                                        image: DecorationImage(
+                                          fit: BoxFit.fill,
+                                          image: NetworkImage(
+                                              "${URLS.IMAGE_URL}/${mycard[index]['card_image']}"),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    child: Container(
+                                      margin: EdgeInsets.only(
+                                          left: 10, top: 30),
+                                      padding:
+                                          EdgeInsets.only(top: 20),
+                                      width: 50,
+                                      height: 40,
+                                      child: FittedBox(
+                                        child: AutoSizeText(
+                                          "${mycard[index]['acronyms']}",
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )),
+                  ),
+                );
+
+          })*/
                         ],
                       ),
-              ),
+              ), 
+
+              //mycard_bottom
             ],
           )),
         ),
@@ -2209,11 +2625,8 @@ class _PracticeGameState extends State<PracticeGame>
   }
 
   _pushMyCard(index) async {
-    print(index);
     setState(() {
       isCPU = true;
-    });
-    setState(() {
       turn = true;
     });
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -2237,13 +2650,10 @@ class _PracticeGameState extends State<PracticeGame>
     } else {
       setState(() {
         if (isCPU) {
-          print('HERE CPU TURN');
-
           Future.delayed(const Duration(seconds: 2), () {
             _CpuTurn();
-
-            // print('ID==>${mycard[index]["card_id"]}');
-            // print('OptionLength==> ${cardOptions.length}');
+            _turnChangeTimer();
+            // _cpuRunHerraf();
           });
         }
       });
@@ -2255,37 +2665,17 @@ class _PracticeGameState extends State<PracticeGame>
 
   _CpuTurn() {
     int count = 0;
-    print('Here==> $userTakenPenlty');
-
     if (deckCards.elementAt(deckCards.length - 1)['card_type'] == 'P') {
-      print('Penalty card on table');
       setState(() {
-        userTakenPenlty
-            ? _pushCPUCard(cpucard.length - 1)
-            : Future.delayed(const Duration(seconds: 2), () {
-                setState(() {
-                  _cpuRunHerraf();
-                  setState(() {
-                    isCPUSpelling = true;
-                    optionTime = cardOptions.length * 2;
-                  });
-                  _selectingOptions();
-                  userTakenPenlty = false;
-                });
-              });
+        Future.delayed(const Duration(seconds: 3), () {
+          _cpuRunHerraf();
+        });
       });
     } else {
-      Future.delayed(const Duration(seconds: 2), () {
-        print(
-            'DeckCardNumber==>${deckCards.elementAt(deckCards.length - 1)['card_number']}');
-        print(
-            'DeckCardColor==>${deckCards.elementAt(deckCards.length - 1)['card_color']}');
-
+      Future.delayed(const Duration(seconds: 3), () {
         for (var i = 0; i < cpucard.length; i++) {
-          print('HERE CPU TURN in LOOP HERE');
           if (deckCards.elementAt(deckCards.length - 1)['card_number'] ==
               cpucard[i]['card_number']) {
-            print('YES(Card Number)==>${cpucard[i]['card_number']}');
             _pushCPUCard(i);
             setState(() {
               isCPU = false;
@@ -2293,21 +2683,29 @@ class _PracticeGameState extends State<PracticeGame>
             break;
           } else if (deckCards.elementAt(deckCards.length - 1)['card_color'] ==
               cpucard[i]['card_color']) {
-            print('YES(Card Color)==>${cpucard[i]['card_color']}');
             _pushCPUCard(i);
             setState(() {
               isCPU = false;
             });
             break;
           } else {
-            print('COUNT==>$count');
             if (count == 1) {
               break;
             }
             setState(() {
               isCPU = false;
               count++;
-              _cPUtakeCardFromDeck();
+              if (cpuChoosingOptions) {
+                _cpuRunHerraf();
+                setState(() {
+                  cpuChoosingOptions = false;
+                });
+              } else {
+                _cPUtakeCardFromDeck();
+                setState(() {
+                  cpuChoosingOptions = true;
+                });
+              }
             });
           }
         }
@@ -2315,41 +2713,39 @@ class _PracticeGameState extends State<PracticeGame>
     }
   }
 
-  _selectingOptions() {
-    print('Screen here');
-    print('Selecting Options');
+  _selectingOptions(optionTime) {
+    setState(() {
+      optionTime = optionTime * 2;
+    });
     Future.delayed(Duration(seconds: optionTime), () {
       _anserChecking();
     });
   }
 
   _anserChecking() {
-    print('Answer Checking');
     Future.delayed(Duration(seconds: 2), () {
       _playAgain();
     });
   }
 
   _playAgain() {
-    print('Play again Clicked');
     setState(() {
+      turn = false;
       isCPUSpelling = false;
       isCPU = false;
       isobserving = false;
     });
-    setState(() {
-      turn = false;
-    });
     _cPUtakeCardFromDeck();
+    _turnChangeTimer();
   }
 
   _pushCPUCard(index) async {
+    _turnChangeTimer();
     _cardColorCPU(cpucard[index]["background"]);
     setState(() {
       showCPUHiddenCard = true;
     });
     await cpuCardController.forward();
-    // print(index);
     SharedPreferences prefs = await SharedPreferences.getInstance();
     ApiService.cpu_praticeGame_deck_area(
             prefs.getString('user_id'),
@@ -2372,7 +2768,6 @@ class _PracticeGameState extends State<PracticeGame>
 
   getDeckCards(group_id) {
     ApiService.practice_get_deck_card(widget.groupId).then((value) {
-      // print('PUSH(AFTER)==>$value');
 
       for (var i = 0; i < value["data"].length; i++) {
         setState(() {
@@ -2390,18 +2785,13 @@ class _PracticeGameState extends State<PracticeGame>
           });
         });
       }
-      // print('PUSH(AFTER)==>${deckCards.last}');
     });
   }
 
   _penalty(id) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    ApiService.penaltyPratice(
-      widget.groupId,
-      prefs.getString('user_id'),
-      id,
-    ).then((value) {
-      print(value['data']);
+    ApiService.penalty(
+            widget.groupId, deckCards[deckCards.length - 1]["card_name"])
+        .then((value) {
       for (var i = 0; i < value["data"].length; i++) {
         setState(() {
           mycard.add({
@@ -2413,36 +2803,30 @@ class _PracticeGameState extends State<PracticeGame>
             "penlty_card_id": value["data"][0]["id"],
             "background": value["data"][0]["background"],
             "card_name": value["data"][0]["card_name"],
-            "card_type": value["data"][0]["card_type"]
+            "card_type": value["data"][0]["card_type"],
+            "card_color": value["data"][0]["card_color"],
+            "postion": 70,
+            "_leftPosition": (mycard.length * 20)
           });
           _turntoast();
           setState(() {
             userTakenPenlty = true;
             Future.delayed(const Duration(seconds: 2), () {
+              turn = true;
+
+              _turnChangeTimer();
               _CpuTurn();
             });
           });
-          // if (isCPU) {
-          //   print('isCPU ==> $isCPU');
-
-          //   print('HERE CPU TURN');
-          //   Future.delayed(const Duration(seconds: 2), () {
-          //     _CpuTurn();
-          //   });
-          // }
         });
       }
     });
   }
 
   _cPUpenalty(id) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    ApiService.penaltyPratice(
-      widget.groupId,
-      prefs.getString('user_id'),
-      id,
-    ).then((value) {
-      print(value['data']);
+    ApiService.penaltyCPU(
+            widget.groupId, deckCards[deckCards.length - 1]["card_name"])
+        .then((value) {
       for (var i = 0; i < value["data"].length; i++) {
         setState(() {
           cpucard.add({
@@ -2454,25 +2838,18 @@ class _PracticeGameState extends State<PracticeGame>
             "penlty_card_id": value["data"][0]["id"],
             "background": value["data"][0]["background"],
             "card_name": value["data"][0]["card_name"],
-            "card_type": value["data"][0]["card_type"]
+            "card_type": value["data"][0]["card_type"],
+            "card_color": value["data"][0]["card_color"]
           });
         });
       }
-      if (isobserving) {
-        Navigator.of(context).pop();
-      } else {
-        print('isobserving==>$isobserving');
-      }
-      _runCPUFirst();
-      if (isCPU == true) {
-        setState(() {
-          isCPU = false;
-        });
-      } else {
-        setState(() {
-          isCPU = true;
-        });
-      }
+      setState(() {
+        int howMany;
+        howMany = deckCards[deckCards.length - 1]["card_name"] == '+2' ? 2 : 4;
+        remainingcards.length = remainingcards.length - howMany;
+        turn = false;
+        _turnChangeTimer();
+      });
     });
   }
 
@@ -2489,8 +2866,6 @@ class _PracticeGameState extends State<PracticeGame>
       prefs.getString('user_id'),
       widget.groupId,
     ).then((value) {
-      // print('CardFromDeck==>$value');
-      // print(value["data"][0]["card_number"]);
       setState(() {
         mycard.add({
           "question": value["data"][0]["question"],
@@ -2501,26 +2876,40 @@ class _PracticeGameState extends State<PracticeGame>
           "penlty_card_id": value["data"][0]["id"],
           "background": value["data"][0]["background"],
           "card_name": value["data"][0]["card_name"],
-          "card_type": value["data"][0]["card_type"]
+          "card_type": value["data"][0]["card_type"],
+          "card_color": value["data"][0]["card_color"],
+          "postion": 70,
+          "_leftPosition": (mycard.length * 20)
         });
-        // print('myCardLemgth==${mycard.length}');
       });
       remainingcards.removeLast();
       setState(() {
         Future.delayed(const Duration(seconds: 2), () {
           if (value["data"][0]["card_number"] ==
               deckCards.last['card_number']) {
-            print('Match Found with card Number');
-          } else if (value["data"][0]["card_color"] ==
-              deckCards.last['card_color']) {
-            print('Match Found with card color');
-          } else {
-            print('NO MATCH FOUND');
             setState(() {
               turn = false;
-              // _turntoast();
               turn = true;
             });
+            _turnChangeTimer();
+
+            _CpuTurn();
+          } else if (value["data"][0]["card_color"] ==
+              deckCards.last['card_color']) {
+            setState(() {
+              turn = false;
+              turn = true;
+            });
+            _turnChangeTimer();
+
+            _CpuTurn();
+          } else {
+            setState(() {
+              turn = false;
+              turn = true;
+            });
+            _turnChangeTimer();
+
             _CpuTurn();
           }
         });
@@ -2529,7 +2918,8 @@ class _PracticeGameState extends State<PracticeGame>
   }
 
   _cPUtakeCardFromDeck() async {
-    print("TAKINGCPU");
+    _turnChangeTimer();
+
     setState(() {
       showRemainingHiddenCard = true;
       offset = Tween<Offset>(begin: Offset(0.0, 0.0), end: Offset(-2.0, 0.0))
@@ -2539,7 +2929,6 @@ class _PracticeGameState extends State<PracticeGame>
     ApiService.cputakeCardFromDeck(
       widget.groupId,
     ).then((value) {
-      // print('CardFromDeck==>$value');
       setState(() {
         cpucard.add({
           "question": value["data"][0]["question"],
@@ -2553,20 +2942,27 @@ class _PracticeGameState extends State<PracticeGame>
           "card_type": value["data"][0]["card_type"],
           "card_color": value["data"][0]["card_color"]
         });
-        print('Took one card from deck==>${value['status']}');
-        // print('INDEX==>${cpucard.elementAt(cpucard.length - 1)}');
       });
       remainingcards.removeLast();
       if (value["data"][0]["card_number"] ==
           deckCards.elementAt(deckCards.length - 1)['card_number']) {
-        print('Match Found with card number');
-        _pushCPUCard(cpucard.length - 1);
+        // _pushCPUCard(cpucard.length - 1);
+        setState(() {
+          turn = true;
+          _turntoast();
+          turn = false;
+          isCPU = false;
+        });
       } else if (value["data"][0]["card_color"] ==
           deckCards.elementAt(deckCards.length - 1)['card_color']) {
-        print('Match Found with card color');
-        _pushCPUCard(cpucard.length - 1);
+        // _pushCPUCard(cpucard.length - 1);
+        setState(() {
+          turn = true;
+          _turntoast();
+          turn = false;
+          isCPU = false;
+        });
       } else {
-        print('NO MATCH FOUND');
         setState(() {
           turn = true;
           _turntoast();

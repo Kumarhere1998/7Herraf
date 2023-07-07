@@ -48,8 +48,7 @@ class _QrCodeScannerOneState extends State<QrCodeScannerOne> {
 
     controller.scannedDataStream.listen((event) {
       setState(() {
-        // File imgFile = File(path);
-        // print(imgFile.path);
+    
         result = event;
         if (result != null) {
           controller.pauseCamera();

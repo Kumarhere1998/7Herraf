@@ -1,37 +1,33 @@
-// ignore_for_file: must_be_immutable
-
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/src/foundation/key.dart';
+import 'package:flutter/src/widgets/framework.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:herraf_app/api_servivce.dart';
 import 'package:herraf_app/bottomNavBar.dart';
+import 'package:herraf_app/failPageForClassic.dart';
 import 'package:herraf_app/failpage.dart';
-import 'package:percent_indicator/percent_indicator.dart';
+import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class QuitquizPratice extends StatefulWidget {
+class QuizForClassic extends StatefulWidget {
   Map? acronyms;
   final groupId;
-  bool isCPU;
-  bool isCPUSpelling;
-  QuitquizPratice(
+  QuizForClassic(
     this.acronyms,
     this.groupId,
-    this.isCPU,
-    this.isCPUSpelling,
   );
 
   @override
-  _QuitquizPraticeState createState() => _QuitquizPraticeState();
+  State<QuizForClassic> createState() => _QuizForClassicState();
 }
 
-bool _hasBeenPressed = false;
-
-class _QuitquizPraticeState extends State<QuitquizPratice> {
+class _QuizForClassicState extends State<QuizForClassic> {
   final String message = '';
 
   late PageController _pageController;
   int currentIndex = 0;
+bool _hasBeenPressed = false;
 
   List acronym = [];
   List quizOption = [];
@@ -49,41 +45,7 @@ class _QuitquizPraticeState extends State<QuitquizPratice> {
 
     _pageController = PageController(initialPage: 0);
 
-    if (widget.isCPU == true) {
-      _cpuGiveAnswer();
-    }
     super.initState();
-  }
-
-  _cpuGiveAnswer() {
-    Future.delayed(const Duration(seconds: 3), () {
-      // if (widget.isCPU == false) {
-      _getCorrectAnswer(0);
-      // }
-    });
-  }
-
-  _getCorrectAnswer(index) {
-    setState(() {
-      currentIndex += 1;
-      if (acronym.length > currentIndex) {
-        _currentSliderValue = (currentIndex + 1);
-
-        _pageController.animateToPage(currentIndex,
-            duration: Duration(milliseconds: 500), curve: Curves.ease);
-      }
-    });
-    _selectedOption(quizOption[index]);
-    if (widget.isCPU == true) {
-      if (acronym.length > selectedOption.length) {
-        Future.delayed(const Duration(seconds: 3), () {
-          _getCorrectAnswer(0);
-        });
-      } else {
-        // checking final answer
-        _checkCorrectAnswer();
-      }
-    }
   }
 
   quiz_options() {
@@ -100,7 +62,32 @@ class _QuitquizPraticeState extends State<QuitquizPratice> {
     });
   }
 
-  _checkCorrectAnswer() {
+  _takeQuizOption(item) {
+    setState(() {
+      quizOption = item["quiz_options"];
+      // selectedOption = item["quiz_option"];
+    });
+  }
+
+  _selectedOption(option) {
+    setState(() {
+      selectedOption.add(option);
+    });
+  }
+
+  _getCorrectAnswer(index) {
+    setState(() {
+      currentIndex += 1;
+      if (acronym.length > currentIndex) {
+        _currentSliderValue = (currentIndex + 1);
+
+        _pageController.animateToPage(currentIndex,
+            duration: Duration(milliseconds: 500), curve: Curves.ease);
+      }
+    });
+    _selectedOption(quizOption[index]);
+  }
+    _checkCorrectAnswer() {
     setState(() {
       if (selectedOption.isEmpty) {
         ScaffoldMessenger.of(context)
@@ -126,16 +113,14 @@ class _QuitquizPraticeState extends State<QuitquizPratice> {
       (widget.acronyms!["card_id"]),
       selectedOption.join(' '),
     ).then((value) {
-      print(value);
-
       if (selectedOption.isEmpty) {
         Text("Please Select the options");
       } else {
         final result = Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => FailPage(
-                  value['message'], widget.isCPU, widget.isCPUSpelling)),
+              builder: (context) => FailPageForClassic(
+                  value['message'])),
         );
         // print(result);
       }
@@ -147,25 +132,6 @@ class _QuitquizPraticeState extends State<QuitquizPratice> {
     ApiService.leaveGame(prefs.get('user_id'), widget.groupId).then((value) {});
     Navigator.push(
         context, MaterialPageRoute(builder: (context) => BottomNav(2)));
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  _takeQuizOption(item) {
-    setState(() {
-      quizOption = item["quiz_options"];
-      // selectedOption = item["quiz_option"];
-    });
-  }
-
-  _selectedOption(option) {
-    setState(() {
-      selectedOption.add(option);
-    });
   }
 
   @override
@@ -290,45 +256,6 @@ class _QuitquizPraticeState extends State<QuitquizPratice> {
             ),
           ),
         ),
-        actions: [
-          Container(
-            decoration: BoxDecoration(
-              // color: Color(0xffCE8C8C),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            margin: EdgeInsets.only(top: 8),
-            padding: const EdgeInsets.only(right: 0),
-            // height: 25,
-            width: 100,
-            alignment: Alignment.center,
-            child: widget.isCPU == true
-                ? Row(
-                    children: [
-                      Icon(
-                        Icons.play_arrow_rounded,
-                        color: Color(0xffCE8C8C),
-                      ),
-                      Text('CPU turn',
-                          style: const TextStyle(
-                              color: Color(0xffCE8C8C), fontSize: 15)),
-                    ],
-                  )
-                : Row(
-                    children: [
-                      Icon(
-                        Icons.play_arrow_rounded,
-                        color: Color(0xffCE8C8C),
-                      ),
-                      Text('Your Turn',
-                          style: const TextStyle(
-                              color: Color(0xffCE8C8C), fontSize: 15)),
-                    ],
-                  ),
-          ),
-          SizedBox(
-            width: 10,
-          )
-        ],
       ),
       backgroundColor: Color(0xffDADADA),
       body: isSpinner
@@ -351,9 +278,9 @@ class _QuitquizPraticeState extends State<QuitquizPratice> {
                       child: Row(
                         children: [
                           TweenAnimationBuilder<Duration>(
-                              duration: const Duration(minutes: 3),
+                              duration: const Duration(minutes: 2),
                               tween: Tween(
-                                  begin: const Duration(minutes: 3),
+                                  begin: const Duration(minutes: 2),
                                   end: Duration.zero),
                               onEnd: () {},
                               builder: (BuildContext context, Duration value,
@@ -562,45 +489,34 @@ class _QuitquizPraticeState extends State<QuitquizPratice> {
                     ),
                   ),
                 ),
-                widget.isCPU
-                    ? Expanded(
-                        child: Align(
-                          alignment: Alignment.bottomCenter,
-                          child: InkWell(
-                              onTap: () {
-                                _checkCorrectAnswer();
-                              },
-                              child: Container()),
-                        ),
-                      )
-                    : Expanded(
-                        child: Align(
-                          alignment: Alignment.bottomCenter,
-                          child: InkWell(
-                              onTap: () {
-                                _checkCorrectAnswer();
-                              },
-                              child: Container(
-                                margin: EdgeInsets.only(bottom: 10),
-                                alignment: Alignment.center,
-                                height: 50,
-                                width: 300,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(5),
-                                  color: Color(0xffCE8C8C),
-                                ),
-                                //  color: Color(0xff267693),
-                                child: Text(
-                                  "Check",
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.poppins(
-                                      color: Color(0xffffffff),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                              )),
-                        ),
-                      ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: InkWell(
+                        onTap: () {
+                          _checkCorrectAnswer();
+                        },
+                        child: Container(
+                          margin: EdgeInsets.only(bottom: 10),
+                          alignment: Alignment.center,
+                          height: 50,
+                          width: 300,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(5),
+                            color: Color(0xffCE8C8C),
+                          ),
+                          //  color: Color(0xff267693),
+                          child: Text(
+                            "Check",
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.poppins(
+                                color: Color(0xffffffff),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500),
+                          ),
+                        )),
+                  ),
+                ),
               ],
             ),
     );

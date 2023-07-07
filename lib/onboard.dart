@@ -38,23 +38,7 @@ class _LoginPage1State extends State<LoginPage1> {
     ;
   }
 
-  //  bool isLoading = true;
-  // var author;
-  // var res;
-  // var result;
-  // var number;
-  // bool flag = true;
-  // void articledetail(id) {
-  //   ApiService.articledetail(id).then((value) {
-  //     res = value["data"];
-  //     setState(() {
-  //       isLoading = false;
-  //       number = value["data"]["post_id"];
-  //       author = value["data"]["id"];
-  //     });
-  //   });
-  //   print("helloabc${res}");
-  // }
+ 
 
   @override
   Widget build(BuildContext context) {

@@ -1,18 +1,14 @@
+// ignore_for_file: must_be_immutable
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:herraf_app/api_servivce.dart';
-import 'package:herraf_app/checout2.dart';
-import 'package:herraf_app/paypal.dart';
-import 'package:herraf_app/status.dart';
-import 'package:herraf_app/status.dart';
 import 'package:herraf_app/thankucheckout.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'procedcard.dart';
-
 class CheckOutStep2 extends StatefulWidget {
-  const CheckOutStep2({Key? key}) : super(key: key);
+  int addressID;
+  CheckOutStep2({required this.addressID});
 
   @override
   State<CheckOutStep2> createState() => _CheckOutStep2State();
@@ -30,15 +26,9 @@ class Cashdata {
 }
 
 class _CheckOutStep2State extends State<CheckOutStep2> {
-  Cashdata _cashdata = new Cashdata();
-  @override
-  List<String> list = <String>['Morocco', 'Shanghai', 'Delhi', 'Tokyo'];
-  String dropdownValue = "Morocco";
   TextEditingController Ccontroller = TextEditingController();
 
   var cashdata;
-  //PostAddress _postAddress;
-
   @override
   void dispose() {
     super.dispose();
@@ -47,20 +37,17 @@ class _CheckOutStep2State extends State<CheckOutStep2> {
   @override
   void initState() {
     _saveUserInfo();
-
+    print('AddressID==>${widget.addressID}');
     super.initState();
   }
 
   Cashdata _cashAddress = new Cashdata();
-  final _formKey = GlobalKey<FormState>();
 
   Future<void> _saveUserInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      // id = prefs.getString("id");
       _cashAddress.user_id = prefs.getString('user_id')!;
       getOrderDetails();
-      // print(_cashdata.user_id);
     });
   }
 
@@ -73,31 +60,29 @@ class _CheckOutStep2State extends State<CheckOutStep2> {
         _cashAddress.total = value["data"]["grandTotal"].toString();
         _cashAddress.status = "In Progress";
         _cashAddress.discount_price = value["data"]["discount"].toString();
-
-        print("Ranjan${_cashAddress.total}");
-        // print("body$_cashAddress.cart_id");
       });
 
       ;
     });
   }
 
-  // var cash = [];
   Map cash = {};
   makeOrder(method) async {
     _cashAddress.payment_method = method;
-    ApiService.casdeliveryhdata(_cashAddress).then((value) {
-      print("hjhjhh${value}");
-      setState(() {
-        //cash = value;
-        print("yhjjh");
-        print("print casdeliveryhdata${cash}");
+    if (method == 'Cash') {
+      ApiService.casdeliveryhdata(_cashAddress, widget.addressID).then((value) {
+        print('VALUE==>$value');
+        if (value['status']) {
+          Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => Thankucheckout(_cashAddress.total)));
+        }
       });
-      Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => Thankucheckout(_cashAddress.total)));
-    });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("We are working on it !!")));
+    }
   }
 
   @override
@@ -284,37 +269,8 @@ class _CheckOutStep2State extends State<CheckOutStep2> {
                 onTap: () {
                   setState(() {
                     makeOrder("Cash");
-
-                    // Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //       builder: (BuildContext context) =>
-                    //           CartOnePage(),
-                    //     ));
-                    // ScaffoldMessenger.of(context).showSnackBar(
-                    //     SnackBar(content: Text("deleted"))
-                    // );
                   });
                 },
-                // SharedPreferences prefs =
-                //     await SharedPreferences.getInstance();
-
-                // setState(() {
-                //  var res = value;
-                // var res = value["data"]["insertId"];
-                // print(res);
-
-                // Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //         builder: (context) => Thankucheckout()));
-
-                //  casdeliveryhdata(cashdata)
-                // Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //         builder: (context) => Thankucheckout()));
-
                 child: Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
@@ -324,8 +280,6 @@ class _CheckOutStep2State extends State<CheckOutStep2> {
                         border: Border.all(
                           color: const Color(0xff7E7E7E),
                           width: 1,
-
-                          //        //color: isPayPalSelected
                         )),
                     height: 70,
                     width: MediaQuery.of(context).size.width * 0.88,

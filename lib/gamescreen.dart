@@ -320,7 +320,6 @@ class _GameScreenState extends State<GameScreen> {
                                 begin: const Duration(minutes: 3),
                                 end: Duration.zero),
                             onEnd: () {
-                              print('Timer ended');
                             },
                             builder: (BuildContext context, Duration value,
                                 Widget? child) {

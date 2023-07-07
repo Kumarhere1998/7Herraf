@@ -32,11 +32,11 @@ class Soundupdate {
 
 class _HomepageOneState extends State<HomepageOne> {
   bool? state;
-  List<Widget> items = [
-    const SliderWidget(),
-    const SliderTwo(),
-    const SlideThree(),
-  ];
+  // List<Widget> items = [
+  //   const SliderWidget(),
+  //   const SliderTwo(),
+  //   const SlideThree(),
+  // ];
   bool isclassicSelected = false;
   bool ispracticeSelected = false;
   bool isSound = false;
@@ -55,11 +55,6 @@ class _HomepageOneState extends State<HomepageOne> {
     super.initState();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   int _index = 0;
   int index = 0;
   Map sound = {};
@@ -71,8 +66,8 @@ class _HomepageOneState extends State<HomepageOne> {
 
   membership() {
     ApiService.membership().then((value) {
+      data = value["data"];
       setState(() {
-        data = value["data"];
         isLoading = false;
       });
     });
@@ -84,11 +79,7 @@ class _HomepageOneState extends State<HomepageOne> {
     ApiService.notification(
       prefs.getString('user_id'),
     ).then((value) {
-      setState(() {
-        notification = [];
-        notification = value["data"];
-        // print(notification);
-      });
+      notification = value["data"];
     });
   }
 
@@ -114,9 +105,6 @@ class _HomepageOneState extends State<HomepageOne> {
       prefs.setBool("sound_effect", isSound);
       prefs.setBool("music", isMusic);
       prefs.setBool("notification_effect", isNotification);
-
-      print(
-          "${prefs.getBool('notification_effect')}_notification_effect_${isNotification}");
     });
     // });
   }
@@ -319,6 +307,11 @@ class _HomepageOneState extends State<HomepageOne> {
     }
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
@@ -506,7 +499,7 @@ class _HomepageOneState extends State<HomepageOne> {
                         children: [
                           SizedBox(
                               height: 70,
-                              child: Image.asset("assets/images/help.png")),
+                              child: Image.asset("assets/images/pnenumo.png")),
                           Text(
                             "Pneumo",
                             style: GoogleFonts.poppins(
@@ -707,7 +700,6 @@ class _HomepageOneState extends State<HomepageOne> {
                                                       value: isNotification,
                                                       onChanged: (value) {
                                                         //state = value;
-
                                                         setState(
                                                           () {
                                                             if (isNotification) {
@@ -764,7 +756,6 @@ class _HomepageOneState extends State<HomepageOne> {
                     controller: PageController(viewportFraction: 0.7),
                     // onPageChanged: (int index) => setState(() => _index = index),
                     onPageChanged: (int index) => setState(() {
-                      print(index);
                       _index = index;
                     }),
                     itemBuilder: (_, i) {
@@ -810,9 +801,7 @@ class _HomepageOneState extends State<HomepageOne> {
                                 ],
                               ),
                               InkWell(
-                                onTap: () {
-                                  print('${data[i]["game_mode_name"]}');
-                                },
+                                onTap: () {},
                                 child: Padding(
                                   padding: const EdgeInsets.only(
                                     top: 32.0,
@@ -901,114 +890,6 @@ class _HomepageOneState extends State<HomepageOne> {
               : Container()
         ],
       ),
-    );
-  }
-}
-
-class SliderWidget extends StatelessWidget {
-  const SliderWidget({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      child: SizedBox(
-        // height: MediaQuery.of(context).size.height * 0.250,
-        width: MediaQuery.of(context).size.width * 0.68,
-        // decoration: BoxDecoration(
-        //     // color: const Color(0xffF1F6FF),
-        //     // border: Border.all(width: 2.68, color: const Color(0xffB6E1F4)),
-        //     borderRadius: const BorderRadius.all(Radius.circular(21.46))),
-        child: Image.asset("assets/images/classic.png"),
-      ),
-      onTap: () {},
-    );
-  }
-}
-
-class SliderTwo extends StatelessWidget {
-  const SliderTwo({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      // height: MediaQuery.of(context).size.height * 0.396,
-      // width: MediaQuery.of(context).size.width * 0.65,
-      width: MediaQuery.of(context).size.width * 0.68,
-      decoration: const BoxDecoration(
-          // color: const Color(0xffF1F6FF),
-          // border: Border.all(width: 2.68, color: const Color(0xffB6E1F4)),
-          borderRadius: BorderRadius.all(Radius.circular(21.46))),
-      child: Image.asset("assets/images/classic.png"),
-    );
-  }
-}
-
-class SlideThree extends StatelessWidget {
-  const SlideThree({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-        // height: MediaQuery.of(context).size.height * 0.396,
-        width: MediaQuery.of(context).size.width * 0.68,
-        // decoration: BoxDecoration(
-        //     color: const Color(0xffF1F6FF),
-        //     border: Border.all(width: 2.68, color: const Color(0xffB6E1F4)),
-        //     borderRadius: const BorderRadius.all(Radius.circular(21.46))),
-        child: Image.asset("assets/images/classic.png"));
-  }
-}
-
-class CarouselSliderExample extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: ListView(children: [
-        CarouselSlider(
-          items: [
-            Container(
-              margin: const EdgeInsets.all(8.0),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10.0),
-                image: const DecorationImage(
-                  image: NetworkImage("url"),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.all(8.0),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10.0),
-                image: const DecorationImage(
-                  image: NetworkImage("url"),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.all(8.0),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10.0),
-                image: const DecorationImage(
-                  image: NetworkImage("url"),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ],
-          options: CarouselOptions(
-            height: 380.0,
-            enlargeCenterPage: true,
-            autoPlay: true,
-            aspectRatio: 16 / 9,
-            autoPlayCurve: Curves.fastOutSlowIn,
-            enableInfiniteScroll: true,
-            autoPlayAnimationDuration: const Duration(milliseconds: 800),
-            viewportFraction: 0.8,
-          ),
-        ),
-      ]),
     );
   }
 }

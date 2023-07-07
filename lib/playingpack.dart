@@ -26,11 +26,10 @@ class _PlayingcreenState extends State<Playingcreen> {
 
   Map mypack = {};
   selectpack() async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    ApiService.selectpack(pref.getString('user_id')).then((value) {
-      print("hoglllg");
+    ApiService.selectpack().then((value) {
+      print(value);
+
       setState(() {
-        print("jj${value}");
         mypack = value["data"];
       });
     });

@@ -1,10 +1,6 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:herraf_app/api_servivce.dart';
-import 'package:herraf_app/procedcard.dart';
-import 'package:herraf_app/thankucheckout.dart';
 
 class Paypalscreen extends StatefulWidget {
   @override
@@ -23,9 +19,7 @@ class _PaypalscreenState extends State<Paypalscreen> {
 
   membership() {
     ApiService.membership().then((value) {
-      print("hoglllg");
       setState(() {
-        print("member${value}");
         data = value["data"];
         // isLoading1 = false;
       });

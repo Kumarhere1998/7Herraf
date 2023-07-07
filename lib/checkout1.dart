@@ -722,7 +722,6 @@ class _CheckOutOneState extends State<CheckOutOne> {
                                       ApiService.postaddressData(postAddress)
                                           .then((value) {
                                         var res = value;
-                                        print(res);
 
                                         Navigator.push(
                                             context,

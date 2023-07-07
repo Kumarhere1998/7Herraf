@@ -26,8 +26,7 @@ class _Playingcreen2State extends State<Playingcreen2> {
 
   Map mypack = {};
   selectpack() async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    ApiService.selectpack(pref.getString('user_id')).then((value) {
+    ApiService.selectpack().then((value) {
       print("selectpack");
       setState(() {
         var mypack = value["data"];

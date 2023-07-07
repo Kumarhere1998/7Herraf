@@ -45,8 +45,7 @@ class _CartOnePageState extends State<CartOnePage> {
     ApiService.paymentdata(pref.getString('user_id')).then((value) {
       setState(() {
         pay = value["data"];
-        print("ordersummary");
-        print("classdata$pay");
+     
       });
     });
   }
@@ -58,14 +57,11 @@ class _CartOnePageState extends State<CartOnePage> {
     SharedPreferences pref = await SharedPreferences.getInstance();
 
     ApiService.addtocartdata(pref.getString('user_id')).then((value) {
-      print("Add to card");
 
       setState(() {
-        print("Cart Value ==>${value}");
         carttt = value['data'];
         isLoading = false;
       });
-      print("Cart lenght ==>${carttt.length}");
     });
   }
 
@@ -78,7 +74,6 @@ class _CartOnePageState extends State<CartOnePage> {
       });
 
       // paymentdata();
-      print(value);
     });
   }
 
@@ -187,7 +182,6 @@ class _CartOnePageState extends State<CartOnePage> {
                       shrinkWrap: true,
                       itemCount: carttt.length,
                       itemBuilder: (BuildContext context, int index) {
-                        // print(" CartLenght on screen ==>${carttt.length}");
 
                         return Column(children: [
                           Container(
@@ -229,7 +223,6 @@ class _CartOnePageState extends State<CartOnePage> {
                                               value: checkedCartItem.contains(
                                                   carttt[index]["id"]),
                                               onChanged: (bool? value) {
-                                                print(value);
                                                 setState(() {
                                                   if (checkedCartItem.contains(
                                                       carttt[index]["id"])) {

@@ -42,7 +42,6 @@ class _FailPageState extends State<FailPage> {
 
   @override
   Widget build(BuildContext context) {
-    print('CPUSpell==>${widget.isCPUSpelling}');
     return Scaffold(
       backgroundColor: Color(0xffffffff),
       resizeToAvoidBottomInset: false,
@@ -104,7 +103,6 @@ class _FailPageState extends State<FailPage> {
                       child: InkWell(
                         onTap: () {
                           if (widget.isCPU) {
-                            print('Is CPU turn $widget.isCPU');
                           } else {
                             Navigator.pop(context);
                             Navigator.pop(context);

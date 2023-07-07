@@ -31,43 +31,26 @@ class _CatalogdescriptionState extends State<Catalogdescription> {
   final GlobalKey webViewKey = GlobalKey();
 
   //final GlobalKey<ScaffoldState> _key = GlobalKey();
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
   List<dynamic> catalog = [];
 
   @override
   void initState() {
     catalogdata();
     super.initState();
-    print("printimagedata");
-    print(widget.pack_name);
+   
   }
 
   catalogdata() {
     ApiService.catalogdata().then((value) {
       // ApiService.class_data("3,4", pref.getString("token"),date).then((value) {
 
-      print("hoglllg");
       setState(() {
-        print("rakhi${value}");
         catalog = value;
       });
     });
   }
 
-  // void initState() {
-  //   // print("${widget.id}");
-  //   // print("${widget.id}");
-  //   // Educationdetail("id");
-
-  //   // TODO: implement initState
-
-  //   super.initState();
-  //   print("printimagedata");
-  //   print(widget.pack_name);
-  //   print(widget.image);
-  //   print(widget.description);
-  //   catalogdata();
-  // }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -411,8 +394,7 @@ class ExpandableText extends StatefulWidget {
     this.text, {
     Key? key,
     this.trimLines = 2,
-  })  : assert(text != null),
-        super(key: key);
+  })  : super(key: key);
 
   final String text;
   final int trimLines;
@@ -430,7 +412,6 @@ class ExpandableTextState extends State<ExpandableText> {
 
   @override
   Widget build(BuildContext context) {
-    final DefaultTextStyle defaultTextStyle = DefaultTextStyle.of(context);
     final colorClickableText = Colors.blue;
     final widgetColor = Colors.black;
     TextSpan link = TextSpan(

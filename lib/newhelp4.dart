@@ -138,16 +138,12 @@ class _SupportRequestState extends State<SupportRequest> {
                   ),
                   onTap: () {
                     if (topicController.text != null) {
-                      print("topicController!.text$topicController!.text");
                       ApiService.postsupport(
                               topicController.text, messageController.text)
                           .then((value) {
                         // .then((id) {
-                        print("id");
                         setState(() {
-                          // support[topicController]['title'];
-                          // support[messageController]['message'];
-                          // print("postsupport${'title'}");
+                         
                           support = value["data"];
                           ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text("${value['message']}")));

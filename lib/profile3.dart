@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:herraf_app/achievement.dart';
 import 'package:herraf_app/api_servivce.dart';
 import 'package:herraf_app/invitetoggle.dart';
@@ -12,10 +13,6 @@ import 'package:herraf_app/newlogin.dart';
 import 'package:herraf_app/pack.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
-
-class AddName {
-  String name = "";
-}
 
 class Profile extends StatefulWidget {
   const Profile({Key? key}) : super(key: key);
@@ -25,28 +22,43 @@ class Profile extends StatefulWidget {
 
 class _ProfileState extends State<Profile> {
   final nameController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  final AddName _data = AddName();
 
   List<dynamic> friendlist = [];
+  List<dynamic> userData = [];
   List<dynamic> mypack = [];
   List<dynamic> userTotalExp = [];
-
   String user_id = '';
+  String friend_photo = '';
+  bool autoFocus = false;
+  bool enabled = false;
+  bool nameUploaded = true;
+  bool urlImage = false;
+  bool imageLoader = true;
 
-  // final FirebaseAuth _auth = FirebaseAuth.instance;
+  // String name = '';
+  List<dynamic> userProfile = [];
+
+  FocusNode inputNode = FocusNode();
+// to open keyboard call this function;
+  void openKeyboard() {
+    FocusScope.of(context).requestFocus(inputNode);
+  }
+
   final FirebaseAuth auth = FirebaseAuth.instance;
+  final GoogleSignIn googleSignIn = GoogleSignIn();
 
-  signOut() async {
+  void logout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    print('User Id at logout time ==>${prefs.getString('user_id')}');
-    prefs.remove(('user_id'));
-
-    await auth.signOut();
-
-    Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => GoogleloginPage1()),
-        (Route route) => false);
+    try {
+      await googleSignIn.signOut();
+      await auth.signOut();
+      prefs.remove(('user_id'));
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => GoogleloginPage1()),
+          (Route route) => false);
+    } catch (e) {
+      print("Error during logout: $e");
+    }
   }
 
   String user_photo = "";
@@ -58,18 +70,29 @@ class _ProfileState extends State<Profile> {
     _getUserInfo();
     _myFriends();
     _mypacks();
-    _clearText();
     _userTotalExp();
-
-    //imageFile = null;
   }
 
-  _getUserInfo() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      user_photo = prefs.getString('photo')!;
-      full_name = prefs.getString('first_name')!;
-      print(full_name);
+  _getUserInfo() {
+    ApiService.userDetails().then((value) {
+      userData = value['data'];
+      user_photo = userData[0]['user_image'];
+      if (user_photo.contains("http") || value.toString().contains("https")) {
+        setState(() {
+          // print("I'm here in IF condition");
+          user_photo = userData[0]['user_image'];
+          full_name = userData[0]['first_name'];
+          imageLoader = false;
+          urlImage = true;
+        });
+      } else {
+        setState(() {
+          // print("I'm here in ELSE condition");
+          user_photo = userData[0]['user_image'];
+          full_name = userData[0]['first_name'];
+          imageLoader = false;
+        });
+      }
     });
   }
 
@@ -77,38 +100,26 @@ class _ProfileState extends State<Profile> {
   bool isLoading = true;
 
   _myFriends() async {
-    print(user_photo);
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    user_id = prefs.getString('user_id')!;
-
-    ApiService.friendlist(prefs.getString('user_id')).then((value) {
+    ApiService.friendlist().then((value) {
+      friendlist = value["data"];
       setState(() {
-        friendlist = [];
-        friendlist = value["data"];
         loading = false;
       });
     });
   }
 
   _mypacks() async {
-    // get selectpack async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    print(pref.get('user_id'));
-    ApiService.selectpack(pref.get('user_id')).then((value) {
-      print(value);
+    ApiService.selectpack().then((value) {
       setState(() {
-        print("Playing Cart ==>${value}");
         isLoading = false;
         if (value['data'].length > 0) {
           mypack = value['data'];
         }
       });
     });
-    // }
   }
 
   _getFromGallery() async {
-    // ignore: deprecated_member_use
     PickedFile? pickedFile = await ImagePicker().getImage(
       source: ImageSource.gallery,
       maxWidth: 2800,
@@ -123,11 +134,15 @@ class _ProfileState extends State<Profile> {
   }
 
   _uploadProfileImage(image) async {
+    setState(() {
+      imageLoader = true;
+    });
     SharedPreferences prefs = await SharedPreferences.getInstance();
     user_id = prefs.getString('user_id')!;
     FormData formdata = FormData.fromMap({
       "id": user_id,
-      "user_image": await MultipartFile.fromFile("$image",
+      "first_name": full_name,
+      "user_image": await MultipartFile.fromFile("${image}",
           filename: "$image".split('/').last),
     });
     var dio = new Dio();
@@ -135,61 +150,44 @@ class _ProfileState extends State<Profile> {
       "http://165.22.215.103:4000/api/users-update",
       data: formdata,
     );
-
     if (response.statusCode == 200) {
-      var data = response.data;
-      print(data);
-      setState(() {
-        user_photo = "${URLS.IMAGE_URL}/${data['data'][0]['user_image']}";
-        print('${URLS.IMAGE_URL}/${data['data'][0]['user_image'].toString()}');
-        prefs.setString('photo', user_photo);
-      });
+      _getUserInfo();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Profle image uploaded successfully'),
+      ));
     }
-
-    // await ApiService.updateProfilePicture(user_id, image).then((value) {
-    //   print(value);
-    // });
   }
 
   _saveProfileName() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    user_id = prefs.getString('user_id')!;
-
-    ApiService.updateProfile(prefs.getString('user_id'), nameController.text)
-        .then((value) {
-      setState(() {
-        full_name = nameController.text;
-        prefs.setString("first_name", full_name);
-      });
-      print(value);
+    ApiService.updateName(nameController.text).then((value) async {
+      if (value['status']) {
+        _getUserInfo();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(value['message']),
+        ));
+      }
     });
   }
 
   _userTotalExp() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     ApiService.userTotalExp(pref.get('user_id')).then((value) {
-      //print(value);
       setState(() {
         userTotalExp = value['data'];
-        print(userTotalExp);
       });
     });
-  }
-
-  _clearText() {
-    nameController.clear();
   }
 
   @override
   Widget build(BuildContext context) {
     var friend = friendlist.length;
     var packs = mypack.length;
-    print(user_photo);
 
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 250, 248, 248),
       body: SafeArea(
           child: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,7 +245,6 @@ class _ProfileState extends State<Profile> {
                                             children: [
                                               InkWell(
                                                 onTap: () {
-                                                  // print('Clicked');
                                                   Navigator.pop(context);
 
                                                   Navigator.push(
@@ -255,10 +252,11 @@ class _ProfileState extends State<Profile> {
                                                       MaterialPageRoute(
                                                           builder: (_) =>
                                                               InvitetoggleApp(
-                                                                GameMode: '',
-                                                                packname: '',
-                                                                packId: 0,
-                                                              )));
+                                                                  GameMode: '',
+                                                                  packname: '',
+                                                                  packId: 0,
+                                                                  inviteFriend:
+                                                                      false)));
                                                 },
                                                 child: Container(
                                                   child: Row(
@@ -339,33 +337,6 @@ class _ProfileState extends State<Profile> {
                                                 ),
                                               ),
                                               InkWell(
-                                                child: Container(
-                                                  alignment: Alignment.center,
-                                                  height: MediaQuery.of(context)
-                                                          .size
-                                                          .height *
-                                                      0.065,
-                                                  width: MediaQuery.of(context)
-                                                          .size
-                                                          .width *
-                                                      0.390,
-                                                  decoration:
-                                                      const BoxDecoration(
-                                                          color:
-                                                              Color(0xffCE8C8C),
-                                                          borderRadius:
-                                                              BorderRadius.all(
-                                                                  (Radius
-                                                                      .circular(
-                                                                          10)))),
-                                                  child: Text("Log out",
-                                                      style: GoogleFonts.poppins(
-                                                          color: const Color(
-                                                              0xffFFFFFF),
-                                                          fontSize: 14,
-                                                          fontWeight:
-                                                              FontWeight.w500)),
-                                                ),
                                                 onTap: () {
                                                   Navigator.pop(context);
                                                   showDialog(
@@ -450,7 +421,7 @@ class _ProfileState extends State<Profile> {
                                                                       InkWell(
                                                                         onTap:
                                                                             () {
-                                                                          signOut();
+                                                                          logout();
                                                                         },
                                                                         child:
                                                                             Container(
@@ -473,6 +444,33 @@ class _ProfileState extends State<Profile> {
                                                                 ],
                                                               ));
                                                 },
+                                                child: Container(
+                                                  alignment: Alignment.center,
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height *
+                                                      0.065,
+                                                  width: MediaQuery.of(context)
+                                                          .size
+                                                          .width *
+                                                      0.390,
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                          color:
+                                                              Color(0xffCE8C8C),
+                                                          borderRadius:
+                                                              BorderRadius.all(
+                                                                  (Radius
+                                                                      .circular(
+                                                                          10)))),
+                                                  child: Text("Log out",
+                                                      style: GoogleFonts.poppins(
+                                                          color: const Color(
+                                                              0xffFFFFFF),
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w500)),
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -488,28 +486,27 @@ class _ProfileState extends State<Profile> {
                     bottom: 38,
                     child: CircleAvatar(
                       radius: 45,
-                      child: ClipOval(
-                        child: imageFile != null
-                            ? Image.file(
-                                imageFile!,
-                                // fit: BoxFit.fill,
-                              )
-                            : AspectRatio(
-                                aspectRatio: 1,
-                                child: Image(
-                                  fit: BoxFit.cover,
-                                  image: NetworkImage(user_photo),
-                                  // image: AssetImage(user_photo),
-                                ),
-                              ),
-                      ),
+                      child: imageLoader
+                          ? CircularProgressIndicator()
+                          : ClipOval(
+                              child: urlImage
+                                  ? CircleAvatar(
+                                      radius: 45,
+                                      backgroundImage:
+                                          NetworkImage("$user_photo"),
+                                    )
+                                  : CircleAvatar(
+                                      radius: 45,
+                                      backgroundImage: NetworkImage(
+                                          "${URLS.IMAGE_URL}/${user_photo}"),
+                                    ),
+                            ),
                     ),
                   ),
                   Positioned(
                       bottom: 0,
                       child: TextButton(
                         onPressed: () {
-                          // print('Clicked');
                           _getFromGallery();
                         },
                         child: Text(
@@ -537,167 +534,57 @@ class _ProfileState extends State<Profile> {
                   borderRadius: BorderRadius.circular(40.0),
                   color: Colors.white),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    full_name,
-                    style: GoogleFonts.poppins(
-                      color: Colors.black,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
+                  Flexible(
+                    child: TextField(
+                      controller: nameController,
+                      focusNode: inputNode,
+                      autofocus: autoFocus,
+                      enabled: enabled,
+                      decoration: InputDecoration(
+                        hintText: full_name,
+                        border: InputBorder.none,
+                      ),
+                      onSubmitted: (value) {
+                        _saveProfileName();
+                      },
                     ),
                   ),
                   IconButton(
-                      icon: Icon(
-                        Icons.edit_outlined,
-                        size: 25,
-                        color: Colors.grey,
-                      ),
                       onPressed: () {
-                        showDialog(
-                            barrierDismissible: false,
-                            context: context,
-                            builder: (BuildContext context) {
-                              return Container(
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(30)),
-                                child: AlertDialog(
-                                  contentPadding: EdgeInsets.zero,
-                                  content: Stack(
-                                    clipBehavior: Clip.none,
-                                    children: <Widget>[
-                                      Form(
-                                        key: _formKey,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: <Widget>[
-                                            Container(
-                                              margin: EdgeInsets.only(left: 55),
-                                              height: 60,
-                                              decoration: BoxDecoration(),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceAround,
-                                                children: [
-                                                  Text("Update your name",
-                                                      style: TextStyle(
-                                                          color: Colors.black54,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                          fontSize: 20,
-                                                          fontFamily:
-                                                              "Helvetica")),
-                                                  IconButton(
-                                                      onPressed: () {
-                                                        _clearText;
-                                                        Navigator.pop(context);
-                                                      },
-                                                      icon: Icon(Icons.close))
-                                                ],
-                                              ),
-                                            ),
-                                            Divider(),
-                                            Padding(
-                                              padding: EdgeInsets.all(30.0),
-                                              child: Container(
-                                                  height: 50,
-                                                  decoration: BoxDecoration(
-                                                      border: Border.all(
-                                                          color: Colors.grey
-                                                              .withOpacity(
-                                                                  0.2))),
-                                                  child: Row(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Expanded(
-                                                        flex: 4,
-                                                        child: TextFormField(
-                                                          controller:
-                                                              nameController,
-                                                          decoration: InputDecoration(
-                                                              hintText:
-                                                                  "Enter your full name",
-                                                              contentPadding:
-                                                                  EdgeInsets.only(
-                                                                      left: 20),
-                                                              border:
-                                                                  InputBorder
-                                                                      .none,
-                                                              focusedBorder:
-                                                                  InputBorder
-                                                                      .none,
-                                                              errorBorder:
-                                                                  InputBorder
-                                                                      .none,
-                                                              hintStyle: TextStyle(
-                                                                  color: Colors
-                                                                      .black26,
-                                                                  fontSize: 18,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w500)),
-                                                        ),
-                                                      )
-                                                    ],
-                                                  )),
-                                            ),
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.all(20.0),
-                                              child: InkWell(
-                                                onTap: () {
-                                                  if (nameController
-                                                      .text.isEmpty) {
-                                                    final snackBar = SnackBar(
-                                                      content: Text(
-                                                          'Please enter your name'),
-                                                    );
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(snackBar);
-                                                  } else {
-                                                    _clearText;
-                                                    _saveProfileName();
-                                                    Navigator.pop(context);
-                                                  }
-                                                },
-                                                child: Container(
-                                                  width: MediaQuery.of(context)
-                                                      .size
-                                                      .width,
-                                                  height: 60,
-                                                  decoration: BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            20),
-                                                    color: Color(0xffCE8C8C),
-                                                  ),
-                                                  child: Center(
-                                                      child: Text(
-                                                    "Update",
-                                                    style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 20,
-                                                        fontWeight:
-                                                            FontWeight.w500),
-                                                  )),
-                                                ),
-                                              ),
-                                            )
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            });
-                      }),
+                        setState(() {
+                          enabled = true;
+                          openKeyboard();
+                        });
+                      },
+                      icon: Icon(
+                        Icons.edit,
+                        color: Colors.grey,
+                      ))
                 ],
               ),
+              // child: Row(
+              //   mainAxisAlignment: MainAxisAlignment.center,
+              //   children: [
+              //     Text(
+              //       full_name,
+              //       style: GoogleFonts.poppins(
+              //         color: Colors.black,
+              //         fontSize: 15,
+              //         fontWeight: FontWeight.w500,
+              //       ),
+              //     ),
+              //     IconButton(
+              //         icon: Icon(
+              //           Icons.edit_outlined,
+              //           size: 25,
+              //           color: Colors.grey,
+              //         ),
+              //         onPressed: () {
+              //           _upadteName() {}
+              //         }),
+              //   ],
+              // ),
             ),
             Container(
               margin: EdgeInsets.only(left: 15, right: 15, top: 10),
@@ -1048,10 +935,10 @@ class _ProfileState extends State<Profile> {
                                       context,
                                       MaterialPageRoute(
                                           builder: (_) => InvitetoggleApp(
-                                                GameMode: '',
-                                                packname: '',
-                                                packId: 0,
-                                              )));
+                                              GameMode: '',
+                                              packname: '',
+                                              packId: 0,
+                                              inviteFriend: false)));
                                 },
                                 child: Text(
                                   'View all',
@@ -1122,10 +1009,11 @@ class _ProfileState extends State<Profile> {
                                                 MaterialPageRoute(
                                                     builder: (_) =>
                                                         InvitetoggleApp(
-                                                          GameMode: '',
-                                                          packname: '',
-                                                          packId: 0,
-                                                        )));
+                                                            GameMode: '',
+                                                            packname: '',
+                                                            packId: 0,
+                                                            inviteFriend:
+                                                                false)));
                                           },
                                         ),
                                       ],
@@ -1135,30 +1023,31 @@ class _ProfileState extends State<Profile> {
                                       itemCount: friendlist.length,
                                       itemBuilder:
                                           (BuildContext context, int index) {
+                                        if (friendlist[index]["user_image"]
+                                                .contains("http") ||
+                                            friendlist[index]["user_image"]
+                                                .toString()
+                                                .contains("https")) {
+                                          urlImage = true;
+                                        } else {}
                                         return Container(
                                             margin: EdgeInsets.only(top: 5),
                                             color: Colors.white,
                                             child: ListTile(
-                                              leading: friendlist[index]
-                                                          ["user_image"] ==
-                                                      null
+                                              leading: urlImage
                                                   ? CircleAvatar(
                                                       backgroundColor:
-                                                          const Color(
-                                                              0xffffffff),
-                                                      radius: 15,
+                                                          Color(0xFFD1CFCF),
+                                                      radius: 20,
                                                       backgroundImage:
-                                                          const AssetImage(
-                                                              'assets/images/ronald.png'))
-                                                  // : Container(),
+                                                          NetworkImage(
+                                                              friendlist[index][
+                                                                  "user_image"]))
                                                   : CircleAvatar(
                                                       radius: 20,
-                                                      child: ClipOval(
-                                                        child: Image.network(
-                                                            friendlist[index][
-                                                                    "user_image"]
-                                                                .toString()),
-                                                      )),
+                                                      backgroundImage: NetworkImage(
+                                                          '${URLS.IMAGE_URL}/${friendlist[index]['user_image']}'),
+                                                    ),
                                               title: Text(
                                                 '${friendlist[index]["first_name"]}',
                                                 style: GoogleFonts.poppins(
@@ -1168,7 +1057,7 @@ class _ProfileState extends State<Profile> {
                                                         FontWeight.w500),
                                               ),
                                               subtitle: Text(
-                                                'Exp 2500',
+                                                'Exp ${friendlist[index]["user_exp"]}',
                                                 style: GoogleFonts.poppins(
                                                     color: Colors.grey,
                                                     fontSize: 10,
@@ -1204,7 +1093,6 @@ class _ProfileState extends State<Profile> {
                               ),
                               TextButton(
                                   onPressed: () {
-                                    // print('Clicked');
                                     Navigator.push(
                                         context,
                                         MaterialPageRoute(

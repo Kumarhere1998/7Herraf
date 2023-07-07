@@ -21,23 +21,22 @@ class _NotificationPage1State extends State<NotificationPage1> {
 
   void initState() {
     _notification();
-    deletenotification(checkedNotificationItem);
+    // deletenotification(checkedNotificationItem);
     super.initState();
   }
 
   bool loading = true;
   bool isPressed = false;
+  String opponentsImage = '';
 
   _notification() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     ApiService.notification(
       prefs.getString('user_id'),
     ).then((value) {
-      print(value);
       setState(() {
         notification = [];
         notification = value["data"];
-        print(notification);
         loading = false;
       });
     });
@@ -45,7 +44,6 @@ class _NotificationPage1State extends State<NotificationPage1> {
 
   Future<void> deletenotification(checkedNotificationItem) async {
     ApiService.deletenotification(checkedNotificationItem).then((value) {
-      print(value);
       setState(() {
         notification.clear();
       });
@@ -56,23 +54,42 @@ class _NotificationPage1State extends State<NotificationPage1> {
 
   _inviteAccept(index) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-
     ApiService.accept_invite(
       prefs.getString('user_id'),
       notification[index]['id'],
       notification[index]['ugg_id'],
       notification[index]['user_from_id'],
     ).then((value) {
-      print('HERE==>$value');
-
-      if (value["status"] == true) {
+      if (value["status"]) {
+        opponentsImage = value["data"][0]["user_image"];
         setState(() {
-          gameFriend.add({
-            "id": value["data"][0]["id"],
-            "image": value["data"][0]["user_image"],
-            "group_id": value["game_group_id"],
-            "pack_id": value["packInfo"][0]["id"]
-          });
+          // gameFriend.add({
+          //   "id": value["data"][0]["id"],
+          //   "image": value["data"][0]["user_image"],
+          //   "group_id": value["game_group_id"],
+          //   "pack_id": value["packInfo"][0]["id"]
+          // });
+          if (opponentsImage.contains("http") ||
+              value.toString().contains("https")) {
+            setState(() {
+              gameFriend.add({
+                "id": value["data"][0]["id"],
+                "image": opponentsImage,
+                "group_id": value["game_group_id"],
+                "pack_id": value["packInfo"][0]["id"]
+              });
+              print('image==>${gameFriend[0]['image']}');
+            });
+          } else {
+            print("Value is not a URL.");
+            gameFriend.add({
+              "id": value["data"][0]["id"],
+              "image": '${URLS.IMAGE_URL}/${opponentsImage}',
+              "group_id": value["game_group_id"],
+              "pack_id": value["packInfo"][0]["id"]
+            });
+            print('image==>${gameFriend[0]['image']}');
+          }
         });
         Navigator.push(
           context,
@@ -85,15 +102,11 @@ class _NotificationPage1State extends State<NotificationPage1> {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text("${value['Here==>']}")));
       }
-
-      // print(gameFriend);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // print("UGG ID on notification Page ==>${notification[index]['ugg_id']}");
-
     return Scaffold(
         body: SingleChildScrollView(
       child: Column(
@@ -123,12 +136,9 @@ class _NotificationPage1State extends State<NotificationPage1> {
                       ),
                       InkWell(
                         onTap: () async {
-                          print('Clicked');
-
                           SharedPreferences prefs =
                               await SharedPreferences.getInstance();
-                          print(
-                              "MYNOTIFICATION=${prefs.getBool('notification_effect')!}");
+
                           if (prefs.getBool('notification_effect') == true) {
                             AudioPlayer()
                                 .play(AssetSource('sound/buttonClicked.wav'));
@@ -150,9 +160,7 @@ class _NotificationPage1State extends State<NotificationPage1> {
                         child: Radio(
                             value: "Selected All",
                             groupValue: "group value",
-                            onChanged: (value) {
-                              print(value); //selected value
-                            }),
+                            onChanged: (value) {}),
                       )
                     : Container(),
                 checkedNotificationItem.length > 0
@@ -162,13 +170,6 @@ class _NotificationPage1State extends State<NotificationPage1> {
                             onTap: () {
                               setState(() {
                                 deletenotification(checkedNotificationItem);
-                                print(checkedNotificationItem.length);
-                                // Navigator.pushReplacement(
-                                //     context,
-                                //     MaterialPageRoute(
-                                //         builder: (context) =>
-                                //             NotificationPage1()));
-
                                 ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(content: Text("deleted")));
                               });
@@ -189,7 +190,7 @@ class _NotificationPage1State extends State<NotificationPage1> {
                     color: Color(0xffCE8C8C),
                   ),
                 )
-              : notification.length == 0
+              : notification.isEmpty
                   ? Center(
                       child: Text('No Notification'),
                     )
@@ -197,8 +198,6 @@ class _NotificationPage1State extends State<NotificationPage1> {
                       shrinkWrap: true,
                       itemCount: notification.length,
                       itemBuilder: (BuildContext context, int index) {
-                        // print(
-                        //     'ID PASSED TO API ==>${notification[index]["id"]}');
                         return SingleChildScrollView(
                           child: Row(
                               mainAxisAlignment: MainAxisAlignment.end,
@@ -219,16 +218,10 @@ class _NotificationPage1State extends State<NotificationPage1> {
                                               checkedNotificationItem.contains(
                                                   notification[index]["id"]),
                                           onChanged: (bool? value) {
-                                            print(
-                                                'SLECTED ID==>${notification[index]["id"]}');
-                                            // print(
-                                            //     'ITEMS CHECKED==>$checkedNotificationItem.length');
                                             setState(() {
                                               if (checkedNotificationItem
                                                   .contains(notification[index]
                                                       ["id"])) {
-                                                print(
-                                                    'SELECTED==>$notification[index]["id"]');
                                                 checkedNotificationItem.remove(
                                                     notification[index]["id"]);
                                               } else {
@@ -243,7 +236,6 @@ class _NotificationPage1State extends State<NotificationPage1> {
                                 ),
                                 Container(
                                   margin: EdgeInsets.only(right: 20),
-                                  // color: Colors.amber,
                                   width:
                                       MediaQuery.of(context).size.width * 0.8,
                                   child: Card(
@@ -273,9 +265,7 @@ class _NotificationPage1State extends State<NotificationPage1> {
                                                 MainAxisAlignment.end,
                                             children: [
                                               InkWell(
-                                                onTap: () {
-                                                  print('Reject Invitation');
-                                                },
+                                                onTap: () {},
                                                 child: Text('Reject Invitation',
                                                     style: GoogleFonts.poppins(
                                                         color:

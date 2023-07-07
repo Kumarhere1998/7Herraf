@@ -1,14 +1,11 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-
 import 'package:herraf_app/splashscreen.dart';
-import 'package:herraf_app/upercatalog.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 void main() {
   IO.Socket socket = IO.io('http://localhost:3000');
   socket.onConnect((_) {
-    print('connect');
     socket.emit('msg', 'test');
   });
   socket.on('event', (data) => print(data));
@@ -32,18 +29,18 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-          primarySwatch: Colors.blue,
-          appBarTheme: AppBarTheme(
-            color: Colors.white,
-            elevation: 0.0,
-            iconTheme: IconThemeData(color: Colors.red),
-          )),
-      home: MyHomePage3()
-      // home: CardList(),
-    );
+        debugShowCheckedModeBanner: false,
+        title: 'Flutter Demo',
+        theme: ThemeData(
+            primarySwatch: Colors.blue,
+            appBarTheme: AppBarTheme(
+              color: Colors.white,
+              elevation: 0.0,
+              iconTheme: IconThemeData(color: Colors.red),
+            )),
+        home: MyHomePage3()
+        // home: OppenentWon('here'),
+        );
   }
 }
 

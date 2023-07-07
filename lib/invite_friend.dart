@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:herraf_app/api_servivce.dart';
 import 'package:herraf_app/invite.dart';
 import 'package:herraf_app/pack.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class InviteFriend extends StatefulWidget {
   const InviteFriend({Key? key}) : super(key: key);
@@ -15,11 +14,8 @@ class InviteFriend extends StatefulWidget {
 class _InviteFriendState extends State<InviteFriend> {
   var Invitefriend;
   get invitefriend async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    ApiService.selectpack(pref.get('user_id')).then((value) {
-      // print("hoglllg");
+    ApiService.selectpack().then((value) {
       setState(() {
-        print("${value}");
         Invitefriend = value["data"];
         // isLoading = false;
       });
@@ -307,7 +303,6 @@ class BodyWidget extends StatelessWidget {
                   value: isSwitched,
                   onChanged: (value) {
                     isSwitched = value;
-                    print(isSwitched);
                   },
                   activeTrackColor: Color.fromRGBO(178, 255, 89, 1),
                   activeColor: Colors.green,

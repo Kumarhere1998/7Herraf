@@ -82,6 +82,7 @@ dependencies:
   just_the_tooltip: ^0.0.12
   cached_network_image: ^3.2.1
   checkbox_grouped: ^1.8.2
+  http: ^0.13.5
 
  
 

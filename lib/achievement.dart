@@ -51,35 +51,40 @@ class _AchievementScreenState extends State<AchievementScreen> {
   @override
   void initState() {
     _dailyLoginStreaks();
-    _addFriendAchivement();
-    _buyPacksAchivement();
-    _gameWonAchivement();
-    _gameLostAchivement();
+    // _addFriendAchivement();
+    // _buyPacksAchivement();
+    // _gameWonAchivement();
+    // _gameLostAchivement();
     super.initState();
   }
 
   _dailyLoginStreaks() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     ApiService.dailyLoginStreaks(pref.get('user_id')).then((value) {
+      print(value);
       setState(() {
         dailLoginStreaks = value['data'];
-        isLoading == false;
+        if (value['status']) {
+          setState(() {
+            isLoading = false;
+          });
+        }
       });
       // setState(() {
-      //   for (var i = 0; i < value["data"].length; i++) {
-
-      //   }
+      // for (var i = 0; i < value["data"].length; i++) {
+      //   print(i);
+      //   print(value["data"][i]['user_id']);
+      // }
       // });
-      // print(dailLoginStreaks);
     });
   }
 
   _addFriendAchivement() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     ApiService.addFriendAchivement(pref.get('user_id')).then((value) {
+      print(value);
       setState(() {
         addFriendAchivement = value['data'];
-        // print(addFriendAchivement);
         isLoading == false;
       });
     });
@@ -88,7 +93,6 @@ class _AchievementScreenState extends State<AchievementScreen> {
   _buyPacksAchivement() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     ApiService.buyPacksAchivement(pref.get('user_id')).then((value) {
-      //print('PACKS==> $value');
       packsAchivement = value;
       isLoading == false;
     });
@@ -179,7 +183,6 @@ class _AchievementScreenState extends State<AchievementScreen> {
                       setState(() {
                         currentPage = index!;
                       });
-                      print('switched to: $index');
                     },
                   ),
                 ),
@@ -196,7 +199,6 @@ class _AchievementScreenState extends State<AchievementScreen> {
   }
 
   Widget AllPage() {
-    print(isLoading);
     return SingleChildScrollView(
       child: isLoading
           ? Center(
@@ -204,326 +206,190 @@ class _AchievementScreenState extends State<AchievementScreen> {
             )
           : Column(
               children: [
-                Container(
-                  margin: EdgeInsets.only(left: 15, right: 15),
-                  height: 90,
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '${facebook[0]['name']}',
-                            style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: const Color((0xff212121))),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('Subscribe',
-                                  style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 14,
-                                      color: const Color((0xffCE8C8C)))),
-                              Text('Exp ${facebook[0]['exp']}',
-                                  style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 12,
-                                      color: const Color((0xff7E7E7E))))
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.only(left: 15, right: 15),
-                  height: 90,
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '   ${spellAcronym[0]['name']}',
-                            style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: const Color((0xff212121))),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                        margin: EdgeInsets.only(left: 10),
-                                        child: Row(
-                                          children: [
-                                            Text(
-                                                '${spellAcronym[0]['totalAcronym']}',
-                                                style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xffCE8C8C))),
-                                            Text(
-                                              "/${spellAcronym[0]['needAcronym']}",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold),
-                                            )
-                                          ],
-                                        )),
-                                    LinearPercentIndicator(
-                                      width: 270,
-                                      animation: true,
-                                      lineHeight: 6.0,
-                                      // animationDuration: 2500,
-                                      percent: (int.parse(
-                                              spellAcronym[0]['totalAcronym']) /
-                                          int.parse(
-                                              spellAcronym[0]['needAcronym'])),
-                                      barRadius: const Radius.circular(20),
-                                      progressColor: Color(0xffCE8C8C),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text('Exp ${spellAcronym[0]['exp']}',
-                                  style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 12,
-                                      color: const Color((0xff7E7E7E))))
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.only(left: 15, right: 15),
-                  height: 90,
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '${cardDraw[0]['name']}',
-                            style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: const Color((0xff212121))),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                        margin: EdgeInsets.only(left: 10),
-                                        child: Row(
-                                          children: [
-                                            Text(
-                                                '${cardDraw[0]['totalcardDraw']}',
-                                                style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xffCE8C8C))),
-                                            Text(
-                                              "/${cardDraw[0]['needcardDraw']}",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold),
-                                            )
-                                          ],
-                                        )),
-                                    LinearPercentIndicator(
-                                      width: 270,
-                                      animation: true,
-                                      lineHeight: 6.0,
-                                      // animationDuration: 2500,
-                                      percent: (int.parse(
-                                              cardDraw[0]['totalcardDraw']) /
-                                          int.parse(
-                                              cardDraw[0]['needcardDraw'])),
-                                      barRadius: const Radius.circular(20),
-                                      progressColor: Color(0xffCE8C8C),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text('Exp ${cardDraw[0]['exp']}',
-                                  style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 12,
-                                      color: const Color((0xff7E7E7E))))
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.only(left: 15, right: 15),
-                  height: 90,
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '   Your Daily Login Streaks',
-                            style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: const Color((0xff212121))),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                        margin: EdgeInsets.only(left: 10),
-                                        child: Row(
-                                          children: [
-                                            Text(
-                                                '${dailLoginStreaks[0]['current_streak']}',
-                                                style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xffCE8C8C))),
-                                            Text(
-                                              "/${dailLoginStreaks[0]['streak_goal']}",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold),
-                                            )
-                                          ],
-                                        )),
-                                    LinearPercentIndicator(
-                                      width: 270,
-                                      animation: true,
-                                      lineHeight: 6.0,
-                                      // animationDuration: 2500,
-                                      percent: dailLoginStreaks[0]
-                                              ['current_streak'] /
-                                          dailLoginStreaks[0]['streak_goal'],
-                                      barRadius: const Radius.circular(20),
-                                      progressColor: Color(0xffCE8C8C),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text('Exp ${cardDraw[0]['exp']}',
-                                  style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 12,
-                                      color: const Color((0xff7E7E7E))))
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.only(left: 15, right: 15),
-                  height: 90,
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            // '${AddfriendList[index]['name']}',
-                            '  Add 10 friends',
-                            style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: const Color((0xff212121))),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                        margin: EdgeInsets.only(left: 10),
-                                        child: Row(
-                                          children: [
-                                            Text(
-                                                '${addFriendAchivement[0]['current_no_of_friends']}',
-                                                style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xffCE8C8C))),
-                                            Text(
-                                              "/${addFriendAchivement[0]['goal_no_of_friends']}",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold),
-                                            )
-                                          ],
-                                        )),
-                                    LinearPercentIndicator(
-                                      width: 270,
-                                      animation: true,
-                                      lineHeight: 6.0,
-                                      // animationDuration: 2000,
-                                      //percent: (0.4),
-
-                                      percent: addFriendAchivement[0]
-                                              ['current_no_of_friends'] /
-                                          addFriendAchivement[0]
-                                              ['goal_no_of_friends'],
-
-                                      barRadius: const Radius.circular(20),
-                                      progressColor: Color(0xffCE8C8C),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text('Exp 300',
-                                  style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 12,
-                                      color: const Color((0xff7E7E7E))))
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.only(left: 15, right: 15),
-                  height: 90,
-                  child: Card(
-                    child: Padding(
+                // Container(
+                //   margin: EdgeInsets.only(left: 15, right: 15),
+                //   height: 90,
+                //   child: Card(
+                //     child: Padding(
+                //       padding: const EdgeInsets.all(12),
+                //       child: Column(
+                //         crossAxisAlignment: CrossAxisAlignment.start,
+                //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //         children: [
+                //           Text(
+                //             '${facebook[0]['name']}',
+                //             style: GoogleFonts.poppins(
+                //                 fontWeight: FontWeight.w500,
+                //                 fontSize: 14,
+                //                 color: const Color((0xff212121))),
+                //           ),
+                //           Row(
+                //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //             children: [
+                //               Text('Subscribe',
+                //                   style: GoogleFonts.poppins(
+                //                       fontWeight: FontWeight.w500,
+                //                       fontSize: 14,
+                //                       color: const Color((0xffCE8C8C)))),
+                //               Text('Exp ${facebook[0]['exp']}',
+                //                   style: GoogleFonts.poppins(
+                //                       fontWeight: FontWeight.w400,
+                //                       fontSize: 12,
+                //                       color: const Color((0xff7E7E7E))))
+                //             ],
+                //           )
+                //         ],
+                //       ),
+                //     ),
+                //   ),
+                // ),
+                // Container(
+                //   margin: EdgeInsets.only(left: 15, right: 15),
+                //   height: 90,
+                //   child: Card(
+                //     child: Padding(
+                //       padding: const EdgeInsets.all(12),
+                //       child: Column(
+                //         crossAxisAlignment: CrossAxisAlignment.start,
+                //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //         children: [
+                //           Text(
+                //             '   ${spellAcronym[0]['name']}',
+                //             style: GoogleFonts.poppins(
+                //                 fontWeight: FontWeight.w500,
+                //                 fontSize: 14,
+                //                 color: const Color((0xff212121))),
+                //           ),
+                //           Row(
+                //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //             children: [
+                //               Container(
+                //                 child: Column(
+                //                   crossAxisAlignment: CrossAxisAlignment.start,
+                //                   children: [
+                //                     Container(
+                //                         margin: EdgeInsets.only(left: 10),
+                //                         child: Row(
+                //                           children: [
+                //                             Text(
+                //                                 '${spellAcronym[0]['totalAcronym']}',
+                //                                 style: TextStyle(
+                //                                     fontWeight: FontWeight.bold,
+                //                                     color: Color(0xffCE8C8C))),
+                //                             Text(
+                //                               "/${spellAcronym[0]['needAcronym']}",
+                //                               style: TextStyle(
+                //                                   fontWeight: FontWeight.bold),
+                //                             )
+                //                           ],
+                //                         )),
+                //                     LinearPercentIndicator(
+                //                       width: 270,
+                //                       animation: true,
+                //                       lineHeight: 6.0,
+                //                       // animationDuration: 2500,
+                //                       percent: (int.parse(
+                //                               spellAcronym[0]['totalAcronym']) /
+                //                           int.parse(
+                //                               spellAcronym[0]['needAcronym'])),
+                //                       barRadius: const Radius.circular(20),
+                //                       progressColor: Color(0xffCE8C8C),
+                //                     ),
+                //                   ],
+                //                 ),
+                //               ),
+                //               Text('Exp ${spellAcronym[0]['exp']}',
+                //                   style: GoogleFonts.poppins(
+                //                       fontWeight: FontWeight.w400,
+                //                       fontSize: 12,
+                //                       color: const Color((0xff7E7E7E))))
+                //             ],
+                //           )
+                //         ],
+                //       ),
+                //     ),
+                //   ),
+                // ),
+                // Container(
+                //   margin: EdgeInsets.only(left: 15, right: 15),
+                //   height: 90,
+                //   child: Card(
+                //     child: Padding(
+                //       padding: const EdgeInsets.all(12),
+                //       child: Column(
+                //         crossAxisAlignment: CrossAxisAlignment.start,
+                //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //         children: [
+                //           Text(
+                //             '${cardDraw[0]['name']}',
+                //             style: GoogleFonts.poppins(
+                //                 fontWeight: FontWeight.w500,
+                //                 fontSize: 14,
+                //                 color: const Color((0xff212121))),
+                //           ),
+                //           Row(
+                //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //             children: [
+                //               Container(
+                //                 child: Column(
+                //                   crossAxisAlignment: CrossAxisAlignment.start,
+                //                   children: [
+                //                     Container(
+                //                         margin: EdgeInsets.only(left: 10),
+                //                         child: Row(
+                //                           children: [
+                //                             Text(
+                //                                 '${cardDraw[0]['totalcardDraw']}',
+                //                                 style: TextStyle(
+                //                                     fontWeight: FontWeight.bold,
+                //                                     color: Color(0xffCE8C8C))),
+                //                             Text(
+                //                               "/${cardDraw[0]['needcardDraw']}",
+                //                               style: TextStyle(
+                //                                   fontWeight: FontWeight.bold),
+                //                             )
+                //                           ],
+                //                         )),
+                //                     LinearPercentIndicator(
+                //                       width: 270,
+                //                       animation: true,
+                //                       lineHeight: 6.0,
+                //                       // animationDuration: 2500,
+                //                       percent: (int.parse(
+                //                               cardDraw[0]['totalcardDraw']) /
+                //                           int.parse(
+                //                               cardDraw[0]['needcardDraw'])),
+                //                       barRadius: const Radius.circular(20),
+                //                       progressColor: Color(0xffCE8C8C),
+                //                     ),
+                //                   ],
+                //                 ),
+                //               ),
+                //               Text('Exp ${cardDraw[0]['exp']}',
+                //                   style: GoogleFonts.poppins(
+                //                       fontWeight: FontWeight.w400,
+                //                       fontSize: 12,
+                //                       color: const Color((0xff7E7E7E))))
+                //             ],
+                //           )
+                //         ],
+                //       ),
+                //     ),
+                //   ),
+                // ),
+                for (var i = 0; i < dailLoginStreaks.length; i++) ...[
+                  Container(
+                    margin: EdgeInsets.only(left: 15, right: 15),
+                    height: 90,
+                    child: Card(
+                      child: Padding(
                         padding: const EdgeInsets.all(12),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              '  100 games win',
+                              '  Your Daily Login Streaks',
                               style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.w500,
                                   fontSize: 14,
@@ -541,14 +407,15 @@ class _AchievementScreenState extends State<AchievementScreen> {
                                           margin: EdgeInsets.only(left: 10),
                                           child: Row(
                                             children: [
-                                              Text('${won['gamesWon']}',
+                                              Text(
+                                                  '${dailLoginStreaks[i]['current_streak']}',
                                                   style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.bold,
                                                       color:
                                                           Color(0xffCE8C8C))),
                                               Text(
-                                                "/${won['gameWinGoal']}",
+                                                "/${dailLoginStreaks[i]['streak_goal']}",
                                                 style: TextStyle(
                                                     fontWeight:
                                                         FontWeight.bold),
@@ -559,15 +426,17 @@ class _AchievementScreenState extends State<AchievementScreen> {
                                         width: 270,
                                         animation: true,
                                         lineHeight: 6.0,
-                                        percent: won['gamesWon'] /
-                                            won['gameWinGoal'],
+                                        // animationDuration: 2500,
+                                        percent: dailLoginStreaks[i]
+                                                ['current_streak'] /
+                                            dailLoginStreaks[i]['streak_goal'],
                                         barRadius: const Radius.circular(20),
                                         progressColor: Color(0xffCE8C8C),
                                       ),
                                     ],
                                   ),
                                 ),
-                                Text('Exp 300',
+                                Text('Exp ${cardDraw[i]['exp']}',
                                     style: GoogleFonts.poppins(
                                         fontWeight: FontWeight.w400,
                                         fontSize: 12,
@@ -575,137 +444,276 @@ class _AchievementScreenState extends State<AchievementScreen> {
                               ],
                             )
                           ],
-                        )),
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.only(left: 15, right: 15),
-                  height: 90,
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '  5 packs achivement',
-                            style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: const Color((0xff212121))),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                        margin: EdgeInsets.only(left: 10),
-                                        child: Row(
-                                          children: [
-                                            Text(
-                                                '${packsAchivement['packsBought']}',
-                                                style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xffCE8C8C))),
-                                            Text(
-                                              "/${packsAchivement['totalPacks']}",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold),
-                                            )
-                                          ],
-                                        )),
-                                    LinearPercentIndicator(
-                                      width: 270,
-                                      animation: true,
-                                      lineHeight: 6.0,
-                                      percent: 2 / 5,
-                                      barRadius: const Radius.circular(20),
-                                      progressColor: Color(0xffCE8C8C),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text('Exp 300',
-                                  style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 12,
-                                      color: const Color((0xff7E7E7E))))
-                            ],
-                          )
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Container(
-                  margin: EdgeInsets.only(left: 15, right: 15),
-                  height: 90,
-                  child: Card(
-                    child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '  50 games loose',
-                              style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 14,
-                                  color: const Color((0xff212121))),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Container(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                          margin: EdgeInsets.only(left: 10),
-                                          child: Row(
-                                            children: [
-                                              Text('$lostCount',
-                                                  style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color:
-                                                          Color(0xffCE8C8C))),
-                                              Text(
-                                                "/$totallostCount",
-                                                style: TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.bold),
-                                              )
-                                            ],
-                                          )),
-                                      LinearPercentIndicator(
-                                        width: 270,
-                                        animation: true,
-                                        lineHeight: 6.0,
-                                        percent: lostCount! / totallostCount!,
-                                        barRadius: const Radius.circular(20),
-                                        progressColor: Color(0xffCE8C8C),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Text('Exp 300',
-                                    style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w400,
-                                        fontSize: 12,
-                                        color: const Color((0xff7E7E7E))))
-                              ],
-                            )
-                          ],
-                        )),
-                  ),
-                ),
+                ],
+                // Container(
+                //   margin: EdgeInsets.only(left: 15, right: 15),
+                //   height: 90,
+                //   child: Card(
+                //     child: Padding(
+                //       padding: const EdgeInsets.all(12),
+                //       child: Column(
+                //         crossAxisAlignment: CrossAxisAlignment.start,
+                //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //         children: [
+                //           Text(
+                //             // '${AddfriendList[index]['name']}',
+                //             '  Add 10 friends',
+                //             style: GoogleFonts.poppins(
+                //                 fontWeight: FontWeight.w500,
+                //                 fontSize: 14,
+                //                 color: const Color((0xff212121))),
+                //           ),
+                //           Row(
+                //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //             children: [
+                //               Container(
+                //                 child: Column(
+                //                   crossAxisAlignment: CrossAxisAlignment.start,
+                //                   children: [
+                //                     Container(
+                //                         margin: EdgeInsets.only(left: 10),
+                //                         child: Row(
+                //                           children: [
+                //                             Text(
+                //                                 '${addFriendAchivement[0]['current_no_of_friends']}',
+                //                                 style: TextStyle(
+                //                                     fontWeight: FontWeight.bold,
+                //                                     color: Color(0xffCE8C8C))),
+                //                             Text(
+                //                               "/${addFriendAchivement[0]['goal_no_of_friends']}",
+                //                               style: TextStyle(
+                //                                   fontWeight: FontWeight.bold),
+                //                             )
+                //                           ],
+                //                         )),
+                //                     LinearPercentIndicator(
+                //                       width: 270,
+                //                       animation: true,
+                //                       lineHeight: 6.0,
+                //                       // animationDuration: 2000,
+                //                       //percent: (0.4),
+
+                //                       percent: addFriendAchivement[0]
+                //                               ['current_no_of_friends'] /
+                //                           addFriendAchivement[0]
+                //                               ['goal_no_of_friends'],
+
+                //                       barRadius: const Radius.circular(20),
+                //                       progressColor: Color(0xffCE8C8C),
+                //                     ),
+                //                   ],
+                //                 ),
+                //               ),
+                //               Text('Exp 300',
+                //                   style: GoogleFonts.poppins(
+                //                       fontWeight: FontWeight.w400,
+                //                       fontSize: 12,
+                //                       color: const Color((0xff7E7E7E))))
+                //             ],
+                //           )
+                //         ],
+                //       ),
+                //     ),
+                //   ),
+                // ),
+                // Container(
+                //   margin: EdgeInsets.only(left: 15, right: 15),
+                //   height: 90,
+                //   child: Card(
+                //     child: Padding(
+                //         padding: const EdgeInsets.all(12),
+                //         child: Column(
+                //           crossAxisAlignment: CrossAxisAlignment.start,
+                //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //           children: [
+                //             Text(
+                //               '  100 games win',
+                //               style: GoogleFonts.poppins(
+                //                   fontWeight: FontWeight.w500,
+                //                   fontSize: 14,
+                //                   color: const Color((0xff212121))),
+                //             ),
+                //             Row(
+                //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //               children: [
+                //                 Container(
+                //                   child: Column(
+                //                     crossAxisAlignment:
+                //                         CrossAxisAlignment.start,
+                //                     children: [
+                //                       Container(
+                //                           margin: EdgeInsets.only(left: 10),
+                //                           child: Row(
+                //                             children: [
+                //                               Text('${won['gamesWon']}',
+                //                                   style: TextStyle(
+                //                                       fontWeight:
+                //                                           FontWeight.bold,
+                //                                       color:
+                //                                           Color(0xffCE8C8C))),
+                //                               Text(
+                //                                 "/${won['gameWinGoal']}",
+                //                                 style: TextStyle(
+                //                                     fontWeight:
+                //                                         FontWeight.bold),
+                //                               )
+                //                             ],
+                //                           )),
+                //                       LinearPercentIndicator(
+                //                         width: 270,
+                //                         animation: true,
+                //                         lineHeight: 6.0,
+                //                         percent: won['gamesWon'] /
+                //                             won['gameWinGoal'],
+                //                         barRadius: const Radius.circular(20),
+                //                         progressColor: Color(0xffCE8C8C),
+                //                       ),
+                //                     ],
+                //                   ),
+                //                 ),
+                //                 Text('Exp 300',
+                //                     style: GoogleFonts.poppins(
+                //                         fontWeight: FontWeight.w400,
+                //                         fontSize: 12,
+                //                         color: const Color((0xff7E7E7E))))
+                //               ],
+                //             )
+                //           ],
+                //         )),
+                //   ),
+                // ),
+                // Container(
+                //   margin: EdgeInsets.only(left: 15, right: 15),
+                //   height: 90,
+                //   child: Card(
+                //     child: Padding(
+                //       padding: const EdgeInsets.all(12),
+                //       child: Column(
+                //         crossAxisAlignment: CrossAxisAlignment.start,
+                //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //         children: [
+                //           Text(
+                //             '  5 packs achivement',
+                //             style: GoogleFonts.poppins(
+                //                 fontWeight: FontWeight.w500,
+                //                 fontSize: 14,
+                //                 color: const Color((0xff212121))),
+                //           ),
+                //           Row(
+                //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //             children: [
+                //               Container(
+                //                 child: Column(
+                //                   crossAxisAlignment: CrossAxisAlignment.start,
+                //                   children: [
+                //                     Container(
+                //                         margin: EdgeInsets.only(left: 10),
+                //                         child: Row(
+                //                           children: [
+                //                             Text(
+                //                                 '${packsAchivement['packsBought']}',
+                //                                 style: TextStyle(
+                //                                     fontWeight: FontWeight.bold,
+                //                                     color: Color(0xffCE8C8C))),
+                //                             Text(
+                //                               "/${packsAchivement['totalPacks']}",
+                //                               style: TextStyle(
+                //                                   fontWeight: FontWeight.bold),
+                //                             )
+                //                           ],
+                //                         )),
+                //                     LinearPercentIndicator(
+                //                       width: 270,
+                //                       animation: true,
+                //                       lineHeight: 6.0,
+                //                       percent: 2 / 5,
+                //                       barRadius: const Radius.circular(20),
+                //                       progressColor: Color(0xffCE8C8C),
+                //                     ),
+                //                   ],
+                //                 ),
+                //               ),
+                //               Text('Exp 300',
+                //                   style: GoogleFonts.poppins(
+                //                       fontWeight: FontWeight.w400,
+                //                       fontSize: 12,
+                //                       color: const Color((0xff7E7E7E))))
+                //             ],
+                //           )
+                //         ],
+                //       ),
+                //     ),
+                //   ),
+                // ),
+                // Container(
+                //   margin: EdgeInsets.only(left: 15, right: 15),
+                //   height: 90,
+                //   child: Card(
+                //     child: Padding(
+                //         padding: const EdgeInsets.all(12),
+                //         child: Column(
+                //           crossAxisAlignment: CrossAxisAlignment.start,
+                //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //           children: [
+                //             Text(
+                //               '  50 games loose',
+                //               style: GoogleFonts.poppins(
+                //                   fontWeight: FontWeight.w500,
+                //                   fontSize: 14,
+                //                   color: const Color((0xff212121))),
+                //             ),
+                //             Row(
+                //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //               children: [
+                //                 Container(
+                //                   child: Column(
+                //                     crossAxisAlignment:
+                //                         CrossAxisAlignment.start,
+                //                     children: [
+                //                       Container(
+                //                           margin: EdgeInsets.only(left: 10),
+                //                           child: Row(
+                //                             children: [
+                //                               Text('$lostCount',
+                //                                   style: TextStyle(
+                //                                       fontWeight:
+                //                                           FontWeight.bold,
+                //                                       color:
+                //                                           Color(0xffCE8C8C))),
+                //                               Text(
+                //                                 "/$totallostCount",
+                //                                 style: TextStyle(
+                //                                     fontWeight:
+                //                                         FontWeight.bold),
+                //                               )
+                //                             ],
+                //                           )),
+                //                       LinearPercentIndicator(
+                //                         width: 270,
+                //                         animation: true,
+                //                         lineHeight: 6.0,
+                //                         percent: lostCount! / totallostCount!,
+                //                         barRadius: const Radius.circular(20),
+                //                         progressColor: Color(0xffCE8C8C),
+                //                       ),
+                //                     ],
+                //                   ),
+                //                 ),
+                //                 Text('Exp 300',
+                //                     style: GoogleFonts.poppins(
+                //                         fontWeight: FontWeight.w400,
+                //                         fontSize: 12,
+                //                         color: const Color((0xff7E7E7E))))
+                //               ],
+                //             )
+                //           ],
+                //         )),
+                //   ),
+                // ),
                 SizedBox(
                   height: 20,
                 )

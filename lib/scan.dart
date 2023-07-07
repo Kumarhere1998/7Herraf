@@ -79,6 +79,13 @@ class _OnboardingState extends State<Onboarding> {
                                   fontWeight: FontWeight.w500))),
                     ),
                     InkWell(
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => QrCodeScannerOne()));
+                      },
                       child: Container(
                         alignment: Alignment.center,
                         height: MediaQuery.of(context).size.height * 0.082,
@@ -87,124 +94,12 @@ class _OnboardingState extends State<Onboarding> {
                             color: Color(0xffCE8C8C),
                             borderRadius:
                                 BorderRadius.all((Radius.circular(10)))),
-                        child: InkWell(
-                          child: Text("Allow",
-                              style: GoogleFonts.poppins(
-                                  color: const Color(0xffFFFFFF),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600)),
-                          onTap: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => QrCodeScannerOne()));
-                            // showDialog(
-                            //     context: context,
-                            //     builder: (context) {
-                            //       return AlertDialog(
-                            //         title: Text('Taking pictures',
-                            //             style: GoogleFonts.poppins(
-                            //                 color: const Color(0xff212121),
-                            //                 fontWeight: FontWeight.w500,
-                            //                 fontSize: 20)),
-                            //         content: Text(
-                            //             'Do you allow this app to take pictures\non your device?',
-                            //             style: GoogleFonts.poppins(
-                            //                 color: const Color(0xff786E6E),
-                            //                 fontWeight: FontWeight.w400,
-                            //                 fontSize: 14)),
-                            //         actions: <Widget>[
-                            //           Row(
-                            //             mainAxisAlignment:
-                            //                 MainAxisAlignment.spaceAround,
-                            //             children: [
-                            //               Container(
-                            //                 decoration: BoxDecoration(
-                            //                     border: Border.all(
-                            //                         color:
-                            //                             const Color(0xffB0A9A9),
-                            //                         width: 1),
-                            //                     borderRadius:
-                            //                         const BorderRadius.all(
-                            //                             Radius.circular(8))),
-                            //                 height: MediaQuery.of(context)
-                            //                         .size
-                            //                         .height *
-                            //                     0.082,
-                            //                 width: MediaQuery.of(context)
-                            //                         .size
-                            //                         .width *
-                            //                     0.350,
-                            //                 child: TextButton(
-                            //                     onPressed: () {
-                            //                       Navigator.pop(context);
-                            //                     },
-                            //                     child: Text("Deny",
-                            //                         style: GoogleFonts.poppins(
-                            //                             color: const Color(
-                            //                                 0xffB0A9A9),
-                            //                             fontSize: 14,
-                            //                             fontWeight:
-                            //                                 FontWeight.w500))),
-                            //               ),
-                            //               InkWell(
-                            //                 child: Container(
-                            //                   alignment: Alignment.center,
-                            //                   height: MediaQuery.of(context)
-                            //                           .size
-                            //                           .height *
-                            //                       0.082,
-                            //                   width: MediaQuery.of(context)
-                            //                           .size
-                            //                           .width *
-                            //                       0.350,
-                            //                   decoration: const BoxDecoration(
-                            //                       color: Color(0xffCE8C8C),
-                            //                       borderRadius:
-                            //                           BorderRadius.all(
-                            //                               (Radius.circular(
-                            //                                   10)))),
-                            //                   child: InkWell(
-                            //                     child: Text("Allow",
-                            //                         style: GoogleFonts.poppins(
-                            //                             color: const Color(
-                            //                                 0xffFFFFFF),
-                            //                             fontSize: 14,
-                            //                             fontWeight:
-                            //                                 FontWeight.w600)),
-                            //                     onTap: () {
-                            //                       Navigator.push(
-                            //                           context,
-                            //                           MaterialPageRoute(
-                            //                               builder: (context) =>
-                            //                                   QrCodeScannerOne()));
-                            //                     },
-                            //                   ),
-                            //                 ),
-                            //                 onTap: () async {
-                            //                   // if (await Permission.location.request().isGranted) {
-                            //                   //   // Either the permission was already granted before or the user just granted it.
-                            //                   //   print("Location Permission is granted");
-                            //                   // }else{
-                            //                   //   print("Location Permission is denied.");
-                            //                   // }
-                            //                   // Navigator.push(
-                            //                   //     context,
-                            //                   //     MaterialPageRoute(
-                            //                   //         builder:
-                            //                   //             (context) =>
-                            //                   //         const QrCodeScannerOne()));
-                            //                 },
-                            //               ),
-                            //             ],
-                            //           )
-                            //         ],
-                            //       );
-                            //     });
-                          },
-                        ),
+                        child: Text("Allow",
+                            style: GoogleFonts.poppins(
+                                color: const Color(0xffFFFFFF),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600)),
                       ),
-                      onTap: () {},
                     ),
                   ],
                 )

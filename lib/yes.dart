@@ -6,10 +6,6 @@ import 'package:herraf_app/api_servivce.dart';
 import 'package:herraf_app/newslide.dart';
 import 'package:herraf_app/scan.dart';
 
-import 'package:page_transition/page_transition.dart';
-
-import 'package:photo_view/photo_view.dart';
-
 // This widget is the root of your application.
 
 class YesPage extends StatefulWidget {
@@ -32,9 +28,7 @@ class _YesPageState extends State<YesPage> {
     ApiService.selectcountrydata().then((value) {
       // ApiService.class_data("3,4", pref.getString("token"),date).then((value) {
 
-      print("hoglllg");
       setState(() {
-        print("rakhi${value}");
         country = value;
       });
     });
@@ -42,7 +36,6 @@ class _YesPageState extends State<YesPage> {
 
   @override
   Widget build(BuildContext context) {
-    var imageFile;
     return Scaffold(
         // backgroundColor: Color(0xffDADADA),
         body: SingleChildScrollView(

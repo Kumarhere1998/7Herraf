@@ -1,18 +1,12 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:herraf_app/api_servivce.dart';
-import 'package:herraf_app/bottomtab.dart';
-import 'package:herraf_app/newhome.dart';
+import 'package:herraf_app/bottomNavBar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Thankucheckout extends StatefulWidget {
-  // final String sub_total;
   final String total;
-  // final String total;
-  // const Thankucheckout({Key? key}) : super(key: key);
   Thankucheckout(this.total);
   @override
   State<Thankucheckout> createState() => _ThankucheckoutState();
@@ -39,8 +33,6 @@ dispose() {
 class _ThankucheckoutState extends State<Thankucheckout> {
   void initState() {
     paymentdata();
-    // print(_cashAddress.total)
-    print(widget.total);
     super.initState();
   }
 
@@ -51,8 +43,6 @@ class _ThankucheckoutState extends State<Thankucheckout> {
     ApiService.paymentdata(pref.getString('user_id')).then((value) {
       setState(() {
         pay = value["data"];
-        print("ordersummary");
-        print("classdata$pay");
       });
     });
   }
@@ -120,15 +110,10 @@ class _ThankucheckoutState extends State<Thankucheckout> {
                   ),
                   Container(
                       margin: new EdgeInsets.only(top: 50, left: 150),
-                      // padding: new EdgeInsets.symmetric(
-                      //   horizontal: 30.0,
-                      // ),
                       child: Row(
                         children: <Widget>[
                           Text(
                             "€",
-                            // "€8/hour",
-
                             style: GoogleFonts.poppins(
                                 color: Color(0xFF786E6E),
                                 fontSize: 20,
@@ -136,8 +121,6 @@ class _ThankucheckoutState extends State<Thankucheckout> {
                           ),
                           Text(
                             widget.total,
-                            // pay["grandTotal"].toString(),
-                            // "Shipping details",
                             style: GoogleFonts.poppins(
                                 color: Color(0xffB0A9A9),
                                 fontSize: 20,
@@ -145,9 +128,7 @@ class _ThankucheckoutState extends State<Thankucheckout> {
                             textAlign: TextAlign.center,
                           ),
                         ],
-                      )
-                      // alignment: Alignment.centerLeft,
-                      ),
+                      )),
                   Padding(
                     padding: new EdgeInsets.only(
                       top: 100,
@@ -166,7 +147,7 @@ class _ThankucheckoutState extends State<Thankucheckout> {
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => Home(4)),
+                                      builder: (context) => BottomNav(2)),
                                 );
                               },
                               child: Text(

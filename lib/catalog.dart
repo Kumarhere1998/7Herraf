@@ -61,7 +61,6 @@ class _CatalogPageState extends State<CatalogPage>
         setState(() {
           myflashcard();
         });
-        print("Selected Index: " + _controller.index.toString());
       });
 
       // myflashcard();
@@ -74,9 +73,7 @@ class _CatalogPageState extends State<CatalogPage>
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       _addtocart.user_id = prefs.getString('user_id')!;
-      print(_addtocart.user_id);
       addtocartdata();
-      print('hyy');
     });
   }
 
@@ -87,7 +84,6 @@ class _CatalogPageState extends State<CatalogPage>
   catalogdata() {
     ApiService.catalogdata().then((value) {
       setState(() {
-        // print("rakhi${value}");
         catalog = value["data"];
         isLoading1 = false;
       });
@@ -102,7 +98,6 @@ class _CatalogPageState extends State<CatalogPage>
     _addtocart.discount = item["pack_discount"].toString();
     _addtocart.quantity = "1";
     ApiService.addtocart(_addtocart).then((value) {
-      // print("hjhjhh${value}");
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(value['message'])));
 
@@ -114,15 +109,10 @@ class _CatalogPageState extends State<CatalogPage>
   }
 
   addtocartdata() {
-    print("USERID_${_addtocart.user_id}");
     ApiService.addtocartdata(_addtocart.user_id).then((value) {
-      print("rakhiii${value}");
-
       setState(() {
         totalCartItems = [];
         totalCartItems = value['data'];
-        print(totalCartItems);
-        // print("print addtocartdata${totalCartItems.length}");
       });
     });
   }
@@ -130,12 +120,9 @@ class _CatalogPageState extends State<CatalogPage>
   List flashcard = [];
 
   Future<void> myflashcard() async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    ApiService.myflashcard(pref.getString('user_id')).then((value) {
-      setState(() {
-        print(value);
-        flashcard = value["data"];
-      });
+    ApiService.myflashcard().then((value) {
+      print(value);
+      flashcard = value["data"];
     });
   }
 
@@ -174,8 +161,6 @@ class _CatalogPageState extends State<CatalogPage>
                     Padding(padding: const EdgeInsets.only(right: 140)),
                     InkWell(
                       onTap: () async {
-                        print('CART ==>${carttt.length}');
-
                         var nav = await Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -183,8 +168,6 @@ class _CatalogPageState extends State<CatalogPage>
                         );
                         if (nav == true || nav == null) {
                           addtocartdata();
-                          print("i am back");
-                          //change the state
                         }
                       },
                       child: Container(
@@ -216,6 +199,7 @@ class _CatalogPageState extends State<CatalogPage>
                   child: TabBar(
                     onTap: (index) {
                       myflashcard();
+
                       // Should not used it as it only called when tab options are clicked,
                       // not when user swapped
                     },
@@ -241,7 +225,7 @@ class _CatalogPageState extends State<CatalogPage>
           ),
           SingleChildScrollView(
             child: Container(
-                height: MediaQuery.of(context).size.height * 0.660,
+                height: MediaQuery.of(context).size.height * 0.630,
                 width: MediaQuery.of(context).size.width,
                 child: DefaultTabController(
                     length: 2,
@@ -251,7 +235,9 @@ class _CatalogPageState extends State<CatalogPage>
                           color: Color(0xffE5E5E5),
                           //  padding: const EdgeInsets.only(bottom: 35, left: 25),
                           child: isLoading1
-                              ? Center(child: CircularProgressIndicator(color: Color(0xffCE8C8C)))
+                              ? Center(
+                                  child: CircularProgressIndicator(
+                                      color: Color(0xffCE8C8C)))
                               : ListView.builder(
                                   shrinkWrap: true,
                                   scrollDirection: Axis.vertical,
@@ -445,8 +431,6 @@ class _CatalogPageState extends State<CatalogPage>
                           margin: new EdgeInsets.symmetric(
                             horizontal: 0.0,
                           ),
-                          // child: Padding(
-                          //  padding: const EdgeInsets.all(8.0),
                           child: ListView.builder(
                               scrollDirection: Axis.vertical,
                               shrinkWrap: true,
@@ -454,233 +438,22 @@ class _CatalogPageState extends State<CatalogPage>
                               itemBuilder: (context, index) {
                                 return InkWell(
                                     onTap: () {},
-                                    child: Container(
-                                        margin: new EdgeInsets.symmetric(
-                                            horizontal: 0.0, vertical: 10),
-                                        //   height: 210.0,
-
-                                        child: Column(children: [
-                                          Row(children: [
-                                            Container(
-                                                width: 340,
-                                                height: 500,
-                                                child: Card(
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            15.0),
-                                                    side: BorderSide(
-                                                        color:
-                                                            Color(0xffDADADA),
-                                                        width: 0),
-                                                  ),
-                                                  // shadowColor: Colors.grey,
-                                                  //  elevation: 2,
-                                                  child: Column(
-                                                    children: <Widget>[
-                                                      InkWell(
-                                                        onTap: (() {}),
-                                                        child: Container(
-                                                          width: 300,
-                                                          height: 363,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            // color: Colors.white,
-                                                            image: DecorationImage(
-                                                                image: NetworkImage(
-                                                                    'http://165.22.215.103:4000/uploads/${flashcard[index]["pack_image"]}'),
-                                                                fit: BoxFit
-                                                                    .cover),
-
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .all(Radius
-                                                                        .circular(
-                                                                            0.0)),
-                                                          ),
-                                                          padding:
-                                                              const EdgeInsets
-                                                                      .only(
-                                                                  left: 5,
-                                                                  right: 5,
-                                                                  top: 5),
-                                                          margin:
-                                                              const EdgeInsets
-                                                                      .only(
-                                                                  left: 5,
-                                                                  right: 5,
-                                                                  top: 15),
-
-                                                          // color: Colors.orang
-                                                        ),
-                                                      ),
-                                                      InkWell(
-                                                          onTap: () {
-                                                            // Navigator.push(
-                                                            //   context,
-                                                            //   MaterialPageRoute(
-                                                            // builder: (context) => Ourmembers()
-                                                            //),
-                                                            // );
-                                                          },
-                                                          child: Row(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
-                                                            children: <Widget>[
-                                                              Container(
-                                                                padding:
-                                                                    EdgeInsets
-                                                                        .only(
-                                                                  top: 9,
-                                                                  left: 35,
-                                                                ),
-                                                                // padding:
-                                                                //     EdgeInsets.only(top: 9, left: 8, bottom: 9),
-                                                                child: Text(
-                                                                  flashcard[
-                                                                          index]
-                                                                      [
-                                                                      "pack_name"],
-                                                                  style: GoogleFonts.poppins(
-                                                                      color: Color(
-                                                                          0xFF212121),
-                                                                      fontSize:
-                                                                          18,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .w500),
-                                                                  textAlign:
-                                                                      TextAlign
-                                                                          .start,
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          )),
-                                                      Row(
-                                                        // mainAxisAlignment:
-                                                        //     MainAxisAlignment
-                                                        //         .spaceBetween,
-                                                        children: <Widget>[
-                                                          Padding(
-                                                            padding:
-                                                                EdgeInsets.only(
-                                                              left: 35,
-                                                            ),
-                                                          ),
-                                                          Row(
-                                                            children: <Widget>[
-                                                              RichText(
-                                                                text: TextSpan(
-                                                                    text: "€",
-                                                                    style: GoogleFonts.poppins(
-                                                                        color: Color(
-                                                                            0xFF786E6E),
-                                                                        fontSize:
-                                                                            18,
-                                                                        fontWeight:
-                                                                            FontWeight.w500),
-                                                                    children: [
-                                                                      TextSpan(
-                                                                        text: flashcard[index]["price"]
-                                                                            .toString(),
-                                                                        style: GoogleFonts.poppins(
-                                                                            color: Color(
-                                                                                0xff786E6E),
-                                                                            fontSize:
-                                                                                18,
-                                                                            fontWeight:
-                                                                                FontWeight.w500),
-                                                                      )
-                                                                    ]),
-                                                              ),
-                                                              Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .only(
-                                                                  left: 15,
-                                                                ),
-                                                              ),
-                                                              RichText(
-                                                                text: TextSpan(
-                                                                    text: "€",
-                                                                    style: GoogleFonts.poppins(
-                                                                        color: Color(
-                                                                            0xFF212121),
-                                                                        fontSize:
-                                                                            32,
-                                                                        fontWeight:
-                                                                            FontWeight.w500),
-                                                                    children: [
-                                                                      TextSpan(
-                                                                        text: flashcard[index]["discount"]
-                                                                            .toString(),
-                                                                        style: GoogleFonts.poppins(
-                                                                            color: Color(
-                                                                                0xFF212121),
-                                                                            fontSize:
-                                                                                32,
-                                                                            fontWeight:
-                                                                                FontWeight.w500),
-                                                                      )
-                                                                    ]),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                        .only(
-                                                                    right: 35),
-                                                          ),
-                                                          Row(
-                                                            children: <Widget>[
-                                                              InkWell(
-                                                                  // onTap:
-                                                                  //     () async {
-                                                                  //   addtocart(
-                                                                  //       flashcard[index]);
-                                                                  // },
-                                                                  child: Container(
-                                                                      alignment: Alignment.center,
-                                                                      height: 56,
-                                                                      decoration: BoxDecoration(
-                                                                        borderRadius:
-                                                                            BorderRadius.circular(8),
-                                                                        color: Color(
-                                                                            0xfffffffff),
-                                                                      ),
-
-                                                                      //  color: Color(0xff267693),
-                                                                      child: Row(
-                                                                        children: <
-                                                                            Widget>[
-                                                                          Icon(
-                                                                            Icons.add,
-                                                                            color:
-                                                                                Color(0xffCE8C8C),
-                                                                          ),
-                                                                          Text(
-                                                                            "Add to cart",
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                            style: GoogleFonts.poppins(
-                                                                                color: Color(0xffCE8C8C),
-                                                                                fontSize: 14,
-                                                                                fontWeight: FontWeight.w500),
-                                                                          ),
-                                                                        ],
-                                                                      ))),
-                                                            ],
-                                                          )
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  // margin: EdgeInsets.only(left: 20.0, right: 20.0, top: 5.0),
-                                                ))
-                                          ])
-                                        ])));
+                                    child: Column(children: [
+                                      Row(children: [
+                                        Card(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(
+                                                    15.0),
+                                            side: BorderSide(
+                                                color:
+                                                    Color(0xffDADADA),
+                                                width: 0),
+                                          ),
+                            child: Center(child: Text('Flash Card')),
+                                           )
+                                      ])
+                                    ]));
                               })),
                     ])))),
           ),
